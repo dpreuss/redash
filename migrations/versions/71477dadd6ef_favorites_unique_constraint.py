@@ -1,7 +1,7 @@
 """favorites_unique_constraint
 
 Revision ID: 71477dadd6ef
-Revises: 0f740a081d20
+Revises: 0f740a081d21
 Create Date: 2018-07-11 12:49:52.792123
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "71477dadd6ef"
-down_revision = "0f740a081d20"
+down_revision = "0f740a081d21"
 branch_labels = None
 depends_on = None
 

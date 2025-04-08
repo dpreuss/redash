@@ -4,11 +4,15 @@ x-redash-service: &redash-service
   build:
     context: .
     args:
-      skip_frontend_build: "true"  # set to empty string to build
+      skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - .:/app
+    - redash_app:/app
   env_file:
     - .env
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
 x-redash-environment: &redash-environment
   REDASH_HOST: http://localhost:5001
   REDASH_LOG_LEVEL: "INFO"
@@ -69,3 +73,12 @@ services:
       - "1080:1080"
       - "1025:1025"
     restart: unless-stopped
+
+volumes:
+  redash_app:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}
+  postgres_data:

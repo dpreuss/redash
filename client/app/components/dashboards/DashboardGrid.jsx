@@ -37,15 +37,15 @@ const DashboardWidget = React.memo(
   function DashboardWidget({
     widget,
     dashboard,
-    onLoadWidget,
-    onRefreshWidget,
-    onRemoveWidget,
-    onParameterMappingsChange,
+    filters,
     isEditing,
     canEdit,
     isPublic,
     isLoading,
-    filters,
+    onLoadWidget,
+    onRefreshWidget,
+    onRemoveWidget,
+    onParameterMappingsChange,
   }) {
     const { type } = widget;
     const onLoad = () => onLoadWidget(widget);
@@ -66,6 +66,7 @@ const DashboardWidget = React.memo(
           onRefresh={onRefresh}
           onDelete={onDelete}
           onParameterMappingsChange={onParameterMappingsChange}
+          backgroundColor={dashboard.options?.backgroundColor}
         />
       );
     }
@@ -152,11 +153,25 @@ class DashboardGrid extends React.Component {
     setTimeout(() => {
       this.setState({ disableAnimations: false });
     }, 50);
+
+    // Set background color CSS variable
+    const wrapper = document.querySelector('.dashboard-wrapper');
+    if (wrapper) {
+      wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
+    }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     // update, in case widgets added or removed
     this.autoHeightCtrl.update(this.props.widgets);
+
+    // Update background color if changed
+    if (prevProps.dashboard.options?.backgroundColor !== this.props.dashboard.options?.backgroundColor) {
+      const wrapper = document.querySelector('.dashboard-wrapper');
+      if (wrapper) {
+        wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
+      }
+    }
   }
 
   componentWillUnmount() {

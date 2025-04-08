@@ -122,6 +122,8 @@ export default function prepareLayout(element: any, options: any, data: any) {
     hoverlabel: {
       namelength: -1,
     },
+    paper_bgcolor: options.backgroundColor || '#ffffff',
+    plot_bgcolor: options.backgroundColor || '#ffffff',
   };
 
   switch (options.globalSeriesType) {

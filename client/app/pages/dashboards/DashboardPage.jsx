@@ -26,14 +26,30 @@ import "./DashboardPage.less";
 
 function DashboardSettings({ dashboardConfiguration }) {
   const { dashboard, updateDashboard } = dashboardConfiguration;
+  const backgroundColor = dashboard.options?.backgroundColor || "#ffffff";
+
   return (
     <div className="m-b-10 p-15 bg-white tiled">
-      <Checkbox
-        checked={!!dashboard.dashboard_filters_enabled}
-        onChange={({ target }) => updateDashboard({ dashboard_filters_enabled: target.checked })}
-        data-test="DashboardFiltersCheckbox">
-        Use Dashboard Level Filters
-      </Checkbox>
+      <div className="m-b-15">
+        <Checkbox
+          checked={!!dashboard.dashboard_filters_enabled}
+          onChange={({ target }) => updateDashboard({ dashboard_filters_enabled: target.checked })}
+          data-test="DashboardFiltersCheckbox">
+          Use Dashboard Level Filters
+        </Checkbox>
+      </div>
+      <div className="dashboard-settings-divider" />
+      <div className="dashboard-settings-color">
+        <label htmlFor="bgColorPicker" className="d-block m-b-5">Dashboard Background Color</label>
+        <input
+          id="bgColorPicker"
+          type="color"
+          value={backgroundColor}
+          onChange={e => updateDashboard({ options: { ...dashboard.options, backgroundColor: e.target.value } })}
+          className="form-control"
+          style={{ width: '120px', padding: '0', cursor: 'pointer' }}
+        />
+      </div>
     </div>
   );
 }
