@@ -68,10 +68,17 @@
   label {
     font-weight: 500;
     color: #595959;
+    white-space: nowrap;
   }
 
-  .ant-color-picker-trigger {
-    width: 120px;
-    height: 32px;
+  input[type="color"] {
+    margin-left: 8px;
   }
+}
+
+.dashboard-wrapper {
+  flex-grow: 1;
+  margin-bottom: 70px;
+  background-color: var(--dashboard-background-color, #ffffff);
+  transition: background-color 0.2s ease;
 }
