@@ -1,40 +1,31 @@
-import React from "react";
-import { mount } from "enzyme";
-// import { includes } from "lodash";
-// import { Menu } from "antd";
-// import { mockNotification } from "@/services/notification"; // Mock before loading auth
-import { render, screen, fireEvent } from "@testing-library/react";
-import VisualizationWidget from "../VisualizationWidget";
-
-// Mock services
-// const mockAuth = {
-//   Auth: {
-//     hasPermission: jest.fn(() => true),
-//   },
-// };
-
-jest.mock("@/services/user");
-jest.mock("@/services/organization");
-jest.mock("@/services/notification");
-
 // Mock window.URL.createObjectURL
-// Object.defineProperty(window.URL, 'createObjectURL', {
-//   writable: true,
-//   value: jest.fn(() => 'mocked-url')
-// });
+Object.defineProperty(window.URL, 'createObjectURL', {
+  writable: true,
+  value: jest.fn(() => 'mocked-url')
+});
 
 // Mock modules before imports
-// jest.mock("plotly.js", () => ({
-//   newPlot: jest.fn(),
-//   react: jest.fn(),
-// }));
+jest.mock("plotly.js", () => ({
+  newPlot: jest.fn(),
+  react: jest.fn(),
+}));
 
-// jest.mock("mapbox-gl", () => ({
-//   Map: jest.fn(),
-// }));
+jest.mock("mapbox-gl", () => ({
+  Map: jest.fn(),
+}));
 
-// import { render, screen, fireEvent } from "@testing-library/react";
-// import VisualizationWidget from "../VisualizationWidget";
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { mount } from "enzyme";
+import VisualizationWidget from "../VisualizationWidget";
+import { Auth } from "@/services/auth";
+
+// Mock auth service
+jest.mock("@/services/auth", () => ({
+  Auth: {
+    hasPermission: jest.fn(() => true),
+  },
+}));
 
 // Mock visualization components
 jest.mock("@/components/visualizations/VisualizationRenderer", () => ({
