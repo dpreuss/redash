@@ -4,7 +4,7 @@
   "description": "The frontend part of Redash.",
   "main": "index.js",
   "scripts": {
-    "start": "npm-run-all --parallel watch:viz webpack-dev-server",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider npm-run-all --parallel watch:viz webpack-dev-server",
     "clean": "rm -rf ./client/dist/",
     "build:viz": "(cd viz-lib && yarn build:babel)",
     "build": "yarn clean && yarn build:viz && NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production webpack",
@@ -91,6 +91,8 @@
     "@percy/cypress": "^3.1.2",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
     "@testing-library/cypress": "^8.0.7",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "12.1.5",
     "@types/classnames": "^2.2.10",
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/lodash": "^4.14.157",
