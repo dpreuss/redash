@@ -147,11 +147,14 @@ describe("Dashboard", () => {
     cy.createDashboard("Color Test Dashboard").then(({ id }) => {
       cy.visit(`/dashboards/${id}?edit`);
       
+      // Open settings
+      cy.contains("Dashboard Settings").should("be.visible");
+      
       // Check default background color
-      cy.get("#bgColorPicker").should("have.value", "#ffffff");
+      cy.get('input[type="color"]').should("have.value", "#ffffff");
       
       // Change background color
-      cy.get("#bgColorPicker").invoke("val", "#ff0000").trigger("change");
+      cy.get('input[type="color"]').invoke("val", "#ff0000").trigger("input").trigger("change");
       
       // Save and verify color was applied
       cy.contains("button", "Done Editing").click();

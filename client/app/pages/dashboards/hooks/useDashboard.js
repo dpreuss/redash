@@ -14,11 +14,11 @@ import { editableMappingsToParameterMappings, synchronizeWidgetTitles } from "@/
 import ShareDashboardDialog from "../components/ShareDashboardDialog";
 import useFullscreenHandler from "../../../lib/hooks/useFullscreenHandler";
 import useRefreshRateHandler from "./useRefreshRateHandler";
-import useEditModeHandler from "./useEditModeHandler";
+import useEditModeHandler, { DashboardStatusEnum } from "./useEditModeHandler";
 import useDuplicateDashboard from "./useDuplicateDashboard";
 import { policy } from "@/services/policy";
 
-export { DashboardStatusEnum } from "./useEditModeHandler";
+export { DashboardStatusEnum };
 
 function getAffectedWidgets(widgets, updatedParameters = []) {
   return !isEmpty(updatedParameters)
@@ -35,7 +35,7 @@ function getAffectedWidgets(widgets, updatedParameters = []) {
     : widgets;
 }
 
-function useDashboard(dashboardData) {
+export function useDashboard(dashboardData) {
   const [dashboard, setDashboard] = useState(dashboardData);
   const [filters, setFilters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -250,5 +250,3 @@ function useDashboard(dashboardData) {
     duplicateDashboard,
   };
 }
-
-export default useDashboard;

@@ -1,7 +1,7 @@
 """inline_tags
 
 Revision ID: 0f740a081d21
-Revises: a92d92aa678e
+Revises: 0f740a081d20
 Create Date: 2018-05-10 15:47:56.120338
 
 """
@@ -15,7 +15,7 @@ from redash import models
 
 # revision identifiers, used by Alembic.
 revision = "0f740a081d21"
-down_revision = "a92d92aa678e"
+down_revision = "0f740a081d20"
 branch_labels = None
 depends_on = None
 

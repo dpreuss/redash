@@ -22,15 +22,40 @@ import VisualizationRenderer from "@/components/visualizations/VisualizationRend
 
 import Widget from "./Widget";
 
-function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit }) {
+function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit, onRefresh, onParameterMappingsChange }) {
   const canViewQuery = currentUser.hasPermission("view_query");
   const canEditParameters = canEditDashboard && !isEmpty(invoke(widget, "query.getParametersDefs"));
   const widgetQueryResult = widget.getQueryResult();
   const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
+  const showHeader = widget.options?.showHeader !== false; // default to true if not set
 
   const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType);
   const downloadName = fileType => widgetQueryResult.getName(widget.getQuery().name, fileType);
+
+  const toggleHeader = () => {
+    const newOptions = {
+      ...widget.options,
+      showHeader: !showHeader,
+    };
+    return widget.save('options', newOptions).then(() => {
+      // Force an immediate refresh of the widget
+      if (typeof onRefresh === 'function') {
+        onRefresh();
+      }
+      // Notify parent dashboard of changes to trigger full state update
+      if (typeof onParameterMappingsChange === 'function') {
+        onParameterMappingsChange();
+      }
+      // Force widget to reload its data
+      widget.load(true);
+    });
+  };
+
   return compact([
+    <Menu.Item key="toggle_header" onClick={toggleHeader}>
+      {showHeader ? "Hide Header" : "Show Header"}
+    </Menu.Item>,
+    <Menu.Divider key="divider1" />,
     <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
       {!isQueryResultEmpty ? (
         <Link href={downloadLink("csv")} download={downloadName("csv")} target="_self">
@@ -58,7 +83,7 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
         "Download as Excel File"
       )}
     </Menu.Item>,
-    (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />,
+    (canViewQuery || canEditParameters) && <Menu.Divider key="divider2" />,
     canViewQuery && (
       <Menu.Item key="view_query">
         <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>
@@ -275,6 +300,16 @@ class VisualizationWidget extends React.Component {
     });
   };
 
+  onParametersEdit = parameters => {
+    const { widget, onRefresh } = this.props;
+    const paramOrder = map(parameters, "name");
+    widget.options.paramOrder = paramOrder;
+    widget.save("options", { paramOrder }).then(() => {
+      onRefresh();
+      this.forceUpdate();
+    });
+  };
+
   renderVisualization() {
     const { widget, filters } = this.props;
     const widgetQueryResult = widget.getQueryResult();
@@ -320,16 +355,12 @@ class VisualizationWidget extends React.Component {
   }
 
   render() {
-    const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh } = this.props;
+    const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh, onParameterMappingsChange } = this.props;
     const { localParameters } = this.state;
     const widgetQueryResult = widget.getQueryResult();
     const isRefreshing = isLoading && !!(widgetQueryResult && widgetQueryResult.getStatus());
-    const onParametersEdit = parameters => {
-      const paramOrder = map(parameters, "name");
-      widget.options.paramOrder = paramOrder;
-      widget.save("options", { paramOrder });
-    };
-
+    const showHeader = widget.options?.showHeader !== false; // default to true if not set
+    
     return (
       <Widget
         {...this.props}
@@ -338,16 +369,20 @@ class VisualizationWidget extends React.Component {
           widget,
           canEditDashboard: canEdit,
           onParametersEdit: this.editParameterMappings,
+          onRefresh,
+          onParameterMappingsChange,
         })}
         header={
-          <VisualizationWidgetHeader
-            widget={widget}
-            refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
-            parameters={localParameters}
-            isEditing={isEditing}
-            onParametersUpdate={onRefresh}
-            onParametersEdit={onParametersEdit}
-          />
+          showHeader ? (
+            <VisualizationWidgetHeader
+              widget={widget}
+              refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
+              parameters={localParameters}
+              isEditing={isEditing}
+              onParametersUpdate={onRefresh}
+              onParametersEdit={this.onParametersEdit}
+            />
+          ) : null
         }
         footer={
           <VisualizationWidgetFooter
