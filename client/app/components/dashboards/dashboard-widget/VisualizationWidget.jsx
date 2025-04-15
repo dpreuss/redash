@@ -4,9 +4,9 @@ import { compact, isEmpty, invoke, map } from "lodash";
 import { markdown } from "markdown";
 import cx from "classnames";
 import Menu from "antd/lib/menu";
-import notification from "antd/lib/notification";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
 import { currentUser } from "@/services/auth";
+import recordEvent from "@/services/recordEvent";
 import { formatDateTime } from "@/lib/utils";
 import Link from "@/components/Link";
 import Parameters from "@/components/Parameters";
@@ -19,51 +19,42 @@ import PlainButton from "@/components/PlainButton";
 import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
-import VisualizationName from "@/components/visualizations/VisualizationName";
 
 import Widget from "./Widget";
 
-function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit, onRefresh, onParameterMappingsChange, onOptionsChange }) {
+function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit, onRefresh, onParameterMappingsChange }) {
   const canViewQuery = currentUser.hasPermission("view_query");
   const canEditParameters = canEditDashboard && !isEmpty(invoke(widget, "query.getParametersDefs"));
   const widgetQueryResult = widget.getQueryResult();
   const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
-  const showHeader = widget.options?.showHeader !== false;
+  const showHeader = widget.options?.showHeader !== false; // default to true if not set
 
   const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType);
   const downloadName = fileType => widgetQueryResult.getName(widget.getQuery().name, fileType);
 
   const toggleHeader = () => {
-    const currentOptions = widget.options || {};
-    const showHeader = currentOptions.showHeader !== false;
     const newOptions = {
-      ...currentOptions,
+      ...widget.options,
       showHeader: !showHeader,
     };
-    // TODO: Only update save, if the options have changed - that is - toggleHeader has changed value
-    
-    // Update widget options and save directly
-    return widget.save('options', newOptions).catch(() => {
-      notification.error("Could not update widget options");
+    return widget.save('options', newOptions).then(() => {
+      // Force an immediate refresh of the widget
+      if (typeof onRefresh === 'function') {
+        onRefresh();
+      }
+      // Notify parent dashboard of changes to trigger full state update
+      if (typeof onParameterMappingsChange === 'function') {
+        onParameterMappingsChange();
+      }
+      // Force widget to reload its data
+      widget.load(true);
     });
   };
 
-  const menuItems = [
-    <Menu.Item key="toggle-header" onClick={toggleHeader}>
+  return compact([
+    <Menu.Item key="toggle_header" onClick={toggleHeader}>
       {showHeader ? "Hide Header" : "Show Header"}
     </Menu.Item>,
-  ];
-
-  if (canEditParameters && !widget.isStaticParam) {
-    menuItems.push(
-      <Menu.Item key="edit_parameters" onClick={onParametersEdit}>
-        Edit Parameters
-      </Menu.Item>
-    );
-  }
-
-  return compact([
-    ...menuItems,
     <Menu.Divider key="divider1" />,
     <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
       {!isQueryResultEmpty ? (
@@ -98,6 +89,11 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
         <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>
       </Menu.Item>
     ),
+    canEditParameters && (
+      <Menu.Item key="edit_parameters" onClick={onParametersEdit}>
+        Edit Parameters
+      </Menu.Item>
+    ),
   ]);
 }
 
@@ -123,7 +119,6 @@ function VisualizationWidgetHeader({
   isEditing,
   onParametersUpdate,
   onParametersEdit,
-  showHeader,
 }) {
   const canViewQuery = currentUser.hasPermission("view_query");
 
@@ -132,20 +127,13 @@ function VisualizationWidgetHeader({
       <RefreshIndicator refreshStartedAt={refreshStartedAt} />
       <div className="t-header widget clearfix">
         <div className="th-title">
-          <span>
-            <VisualizationName visualization={widget.visualization} />
-          </span>
-          {showHeader && (
-            <>
-              <p>
-                <span>{widget.getQuery().name}</span>
-              </p>
-              {!isEmpty(widget.getQuery().description) && (
-                <HtmlContent className="text-muted markdown query--description">
-                  {markdown.toHTML(widget.getQuery().description || "")}
-                </HtmlContent>
-              )}
-            </>
+          <p>
+            <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
+          </p>
+          {!isEmpty(widget.getQuery().description) && (
+            <HtmlContent className="text-muted markdown query--description">
+              {markdown.toHTML(widget.getQuery().description || "")}
+            </HtmlContent>
           )}
         </div>
       </div>
@@ -171,7 +159,6 @@ VisualizationWidgetHeader.propTypes = {
   isEditing: PropTypes.bool,
   onParametersUpdate: PropTypes.func,
   onParametersEdit: PropTypes.func,
-  showHeader: PropTypes.bool,
 };
 
 VisualizationWidgetHeader.defaultProps = {
@@ -180,7 +167,6 @@ VisualizationWidgetHeader.defaultProps = {
   onParametersEdit: () => {},
   isEditing: false,
   parameters: [],
-  showHeader: true,
 };
 
 function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
@@ -249,8 +235,8 @@ VisualizationWidgetFooter.defaultProps = { isPublic: false };
 
 class VisualizationWidget extends React.Component {
   static propTypes = {
-    widget: PropTypes.object.isRequired,
-    dashboard: PropTypes.object.isRequired,
+    widget: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    dashboard: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     filters: FiltersType,
     isPublic: PropTypes.bool,
     isLoading: PropTypes.bool,
@@ -260,7 +246,6 @@ class VisualizationWidget extends React.Component {
     onRefresh: PropTypes.func,
     onDelete: PropTypes.func,
     onParameterMappingsChange: PropTypes.func,
-    onOptionsChange: PropTypes.func,
     backgroundColor: PropTypes.string,
   };
 
@@ -274,7 +259,6 @@ class VisualizationWidget extends React.Component {
     onRefresh: () => {},
     onDelete: () => {},
     onParameterMappingsChange: () => {},
-    onOptionsChange: () => {},
     backgroundColor: null,
   };
 
@@ -282,39 +266,19 @@ class VisualizationWidget extends React.Component {
     super(props);
     this.state = {
       localParameters: props.widget.getLocalParameters(),
+      localFilters: props.filters,
     };
   }
 
   componentDidMount() {
-    this.props.onLoad();
-    this._mounted = true;
+    const { widget, onLoad } = this.props;
+    recordEvent("view", "query", widget.visualization.query.id, { dashboard: true });
+    recordEvent("view", "visualization", widget.visualization.id, { dashboard: true });
+    onLoad();
   }
-
-  componentWillUnmount() {
-    this._mounted = false;
-  }
-
-  // TODO: Widget changes (like header visibility) are only reflected after entering dashboard edit mode
-  // Future improvement: Implement immediate refresh when widget options change
-  toggleHeader = () => {
-    const currentOptions = this.props.widget.options || {};
-    const showHeader = currentOptions.showHeader !== false;
-    const newOptions = {
-      ...currentOptions,
-      showHeader: !showHeader,
-    };
-    
-    // Update widget options and save directly
-    return this.props.widget.save('options', newOptions).catch(() => {
-      notification.error("Could not update widget options");
-    });
-  };
 
   onLocalFiltersChange = localFilters => {
     this.setState({ localFilters });
-    if (this.props.onFiltersChange) {
-      this.props.onFiltersChange(localFilters);
-    }
   };
 
   expandWidget = () => {
@@ -391,7 +355,7 @@ class VisualizationWidget extends React.Component {
   }
 
   render() {
-    const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh, onParameterMappingsChange, onOptionsChange } = this.props;
+    const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh, onParameterMappingsChange } = this.props;
     const { localParameters } = this.state;
     const widgetQueryResult = widget.getQueryResult();
     const isRefreshing = isLoading && !!(widgetQueryResult && widgetQueryResult.getStatus());
@@ -407,18 +371,18 @@ class VisualizationWidget extends React.Component {
           onParametersEdit: this.editParameterMappings,
           onRefresh,
           onParameterMappingsChange,
-          onOptionsChange,
         })}
         header={
-          <VisualizationWidgetHeader
-            widget={widget}
-            refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
-            parameters={localParameters}
-            isEditing={isEditing}
-            onParametersUpdate={onRefresh}
-            onParametersEdit={this.onParametersEdit}
-            showHeader={showHeader}
-          />
+          showHeader ? (
+            <VisualizationWidgetHeader
+              widget={widget}
+              refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
+              parameters={localParameters}
+              isEditing={isEditing}
+              onParametersUpdate={onRefresh}
+              onParametersEdit={this.onParametersEdit}
+            />
+          ) : null
         }
         footer={
           <VisualizationWidgetFooter
