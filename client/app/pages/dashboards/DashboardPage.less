@@ -24,9 +24,11 @@
   border-radius: @redash-radius;
   padding: 15px;
   position: fixed;
+  left: 15px;
   bottom: 20px;
+  width: calc(100% - 30px);
   z-index: 99;
-  box-shadow: fade(@redash-gray, 50%) 0px 7px 29px -3px;
+  box-shadow: fade(@redash-gray, 50%) 0px 7px 29px 0px;
   display: flex;
   justify-content: space-between;
 
@@ -35,23 +37,27 @@
     font-size: 14px;
     line-height: 2.1;
     font-weight: 400;
+    display: flex;
+    align-items: center;
 
     .zmdi {
-      margin: 0;
       margin-right: 5px;
       font-size: 24px;
-      position: absolute;
-      bottom: 18px;
+      &:before {
+        vertical-align: middle;
+      }
     }
 
-    span {
-      vertical-align: middle;
-      padding-left: 30px;
+    @media (max-width: 767px) {
+      margin-right: 5px;
     }
   }
 
-  .btn {
-    align-self: center;
+  @media (max-width: 767px) {
+    display: block;
+    h2 {
+      display: none;
+    }
   }
 }
 
@@ -61,14 +67,36 @@
   margin: 15px 0;
 }
 
-.dashboard-settings-color {
-  label {
-    font-weight: 500;
-    color: #595959;
-  }
+.dashboard-settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 
-  .ant-color-picker-trigger {
-    width: 120px;
-    height: 32px;
+.dashboard-settings-filters {
+  flex: 1;
+}
+
+.dashboard-settings-color {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  
+  input[type="color"] {
+    width: 40px;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    padding: 2px;
+    cursor: pointer;
+  }
+}
+
+// backwards compatibility with old dashboards
+dashboard-page {
+  .container {
+    width: 100%;
+    padding: 0;
+    margin: 0;
   }
 }
