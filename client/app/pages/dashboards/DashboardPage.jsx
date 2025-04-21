@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
-import { isEmpty, debounce } from "lodash";
-
+import { isEmpty, debounce, isEqual } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -55,26 +54,28 @@ function DashboardSettings({ dashboard, updateDashboard }) {
     <div className="m-b-10 p-15 bg-white tiled">
       <h4 className="m-t-0">Dashboard Settings</h4>
       <div className="m-t-10 m-b-10">
-        <div className="form-group">
-          <label htmlFor="dashboard-filters-enabled">
+        <div className="dashboard-settings-row">
+          <div className="form-group dashboard-settings-filters">
+            <label htmlFor="dashboard-filters-enabled">
+              <input
+                type="checkbox"
+                id="dashboard-filters-enabled"
+                checked={!!dashboard.dashboard_filters_enabled}
+                onChange={e => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
+              />
+              <span>Use Dashboard Level Filters</span>
+            </label>
+          </div>
+          <div className="form-group dashboard-settings-color">
+            <label htmlFor="dashboard-background-color">Background Color</label>
             <input
-              type="checkbox"
-              id="dashboard-filters-enabled"
-              checked={!!dashboard.dashboard_filters_enabled}
-              onChange={e => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
+              id="dashboard-background-color"
+              type="color"
+              value={localBackgroundColor}
+              onChange={handleBackgroundColorChange}
+              onChangeComplete={handleBackgroundColorChangeComplete}
             />
-            <span>Use Dashboard Level Filters</span>
-          </label>
-        </div>
-        <div className="form-group dashboard-settings-color">
-          <label htmlFor="dashboard-background-color">Background Color</label>
-          <input
-            id="dashboard-background-color"
-            type="color"
-            value={localBackgroundColor}
-            onChange={handleBackgroundColorChange}
-            onChangeComplete={handleBackgroundColorChangeComplete}
-          />
+          </div>
         </div>
       </div>
     </div>
@@ -120,6 +121,7 @@ function DashboardComponent(props) {
   const [filters, setFilters] = useState([]);
   const [editingLayout, setEditingLayout] = useState(props.editMode);
   const [gridDisabled, setGridDisabled] = useState(false);
+  const [isPublic] = useState(false); // Default to false since this is the private dashboard view
 
   useEffect(() => {
     setEditingLayout(props.editMode);
@@ -153,6 +155,42 @@ function DashboardComponent(props) {
       document.removeEventListener("visibilitychange", refreshDashboardIfNeeded);
     };
   }, [dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
+
+  const handleWidgetOptionsChange = widget => {
+    // Find the widget in the dashboard's widgets array
+    const index = dashboard.widgets.findIndex(w => w.id === widget.id);
+    if (index >= 0) {
+      // Create a new widget array to trigger a re-render
+      const updatedWidgets = [...dashboard.widgets];
+      updatedWidgets[index] = widget;
+      
+      // Update the dashboard with both the new widgets array and the current version
+      updateDashboard({ 
+        widgets: updatedWidgets,
+        version: dashboard.version 
+      }).catch(() => {
+        // If save fails, refresh the dashboard to get the latest version
+        window.location.reload();
+      });
+    }
+  };
+
+  const onWidgetSizeChange = useCallback((widget, newSize) => {
+    widget.options = { ...widget.options, ...newSize };
+    updateDashboard({ widgets: [...dashboard.widgets] });
+  }, [dashboard.widgets, updateDashboard]);
+
+  const onParameterMappingsChange = useCallback(() => {
+    // Refresh dashboard when parameter mappings change
+    refreshDashboard();
+  }, [refreshDashboard]);
+
+  // Only update dashboard if layout has changed
+  const handleLayoutChange = useCallback((newLayout) => {
+    if (!isEqual(newLayout, dashboard.layout)) {
+      updateDashboard({ layout: newLayout });
+    }
+  }, [dashboard.layout, updateDashboard]);
 
   return (
     <>
@@ -197,7 +235,14 @@ function DashboardComponent(props) {
           onRefreshWidget={refreshWidget}
           onRemoveWidget={removeWidget}
           onBreakpointChange={setGridDisabled}
-          onLayoutChange={layout => updateDashboard({ layout })}
+          onLayoutChange={handleLayoutChange}
+          onWidgetSizeChange={onWidgetSizeChange}
+          onParameterMappingsChange={onParameterMappingsChange}
+          onOptionsChange={handleWidgetOptionsChange}
+          isPublic={isPublic}
+          isLoading={refreshing}
+          onRefresh={refreshDashboard}
+          backgroundColor={dashboard.options?.backgroundColor}
         />
       </div>
       {editingLayout && (
