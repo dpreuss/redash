@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
-import { isEmpty, debounce, isEqual } from "lodash";
+import { isEmpty, debounce, isEqual, differenceWith } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -18,6 +18,19 @@ import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 import { useDashboard } from "./hooks/useDashboard";
 
 import "./DashboardPage.less";
+
+// Add deepFreeze function at the top level, outside the component
+function deepFreeze(obj) {
+  Object.freeze(obj);
+  Object.getOwnPropertyNames(obj).forEach(function(prop) {
+    if (obj[prop] !== null 
+        && (typeof obj[prop] === 'object' || typeof obj[prop] === 'function')
+        && !Object.isFrozen(obj[prop])) {
+      deepFreeze(obj[prop]);
+    }
+  });
+  return obj;
+}
 
 function DashboardSettings({ dashboard, updateDashboard }) {
   const [localBackgroundColor, setLocalBackgroundColor] = useState(
@@ -115,6 +128,19 @@ AddWidgetContainer.propTypes = {
   className: PropTypes.string,
 };
 
+function normalizeLayout(layout) {
+  // Only keep keys that matter for layout comparison
+  if (!Array.isArray(layout)) return layout;
+  return layout.map(item => ({
+    i: item.i,
+    x: item.x,
+    y: item.y,
+    w: item.w,
+    h: item.h,
+    // add more keys if needed
+  })).sort((a, b) => a.i.localeCompare(b.i));
+}
+
 function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
   const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard } = dashboardConfiguration;
@@ -183,12 +209,20 @@ function DashboardComponent(props) {
     refreshDashboard();
   }, [refreshDashboard]);
 
-  // Only update dashboard if layout has changed
+  // Only update dashboard if layout has changed, and debounce the save
+  const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
   const handleLayoutChange = useCallback((newLayout) => {
-    if (!isEqual(newLayout, dashboard.layout)) {
-      updateDashboard({ layout: newLayout });
+    const normNew = normalizeLayout(newLayout);
+    const normCurrent = normalizeLayout(dashboard.layout);
+    console.log('Comparing normalized layouts:', { normNew, normCurrent });
+    if (!isEqual(normNew, normCurrent)) {
+      console.log('Layout difference:', differenceWith(normNew, normCurrent, isEqual));
+      debouncedUpdateDashboard({ layout: newLayout });
     }
-  }, [dashboard.layout, updateDashboard]);
+  }, [dashboard.layout, debouncedUpdateDashboard]);
+
+  // Deep freeze the layout before passing to DashboardGrid
+  const frozenLayout = useMemo(() => deepFreeze(dashboard.layout), [dashboard.layout]);
 
   return (
     <>
@@ -241,6 +275,7 @@ function DashboardComponent(props) {
           isLoading={refreshing}
           onRefresh={refreshDashboard}
           backgroundColor={dashboard.options?.backgroundColor}
+          layout={frozenLayout}
         />
       </div>
       {editingLayout && (
