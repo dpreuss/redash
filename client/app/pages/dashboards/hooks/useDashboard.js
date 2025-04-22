@@ -72,6 +72,8 @@ export function useDashboard(dashboardData) {
       if (data.layout) {
         data.layout = normalizeLayout(data.layout);
       }
+      // console.log('[updateDashboard] called with:', data, 'includeVersion:', includeVersion, 'dashboard.version:', dashboard.version);
+      // console.trace('[updateDashboard] call stack');
       setDashboard(currentDashboard => extend({}, currentDashboard, data));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
@@ -106,6 +108,8 @@ export function useDashboard(dashboardData) {
   }, [dashboard, updateDashboard]);
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
+    // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
+    // console.trace('[loadWidget] call stack');
     widget.getParametersDefs(); // Force widget to read parameters values from URL
     setDashboard(currentDashboard => extend({}, currentDashboard));
     return widget
