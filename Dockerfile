@@ -95,13 +95,14 @@ EOF
 
 WORKDIR /app
 
-ENV POETRY_VERSION=1.8.3
-ENV POETRY_HOME=/etc/poetry
+ENV POETRY_VERSION=1.4.2
+ENV POETRY_HOME=/opt/poetry
+ENV PATH="/opt/poetry/bin:$PATH"
 ENV POETRY_VIRTUALENVS_CREATE=false
-RUN curl -sSL https://install.python-poetry.org | python3 -
 
-# Avoid crashes, including corrupted cache artifacts, when building multi-platform images with GitHub Actions.
-RUN /etc/poetry/bin/poetry cache clear pypi --all
+RUN pip install --upgrade pip && \
+    curl -sSL https://install.python-poetry.org | python3 - && \
+    poetry config virtualenvs.create false
 
 COPY pyproject.toml poetry.lock ./
 
@@ -109,7 +110,7 @@ ARG POETRY_OPTIONS="--no-root --no-interaction --no-ansi"
 # for LDAP authentication, install with `ldap3` group
 # disabled by default due to GPL license conflict
 ARG install_groups="main,all_ds,dev"
-RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
+RUN poetry install --only $install_groups $POETRY_OPTIONS
 
 COPY --chown=redash . /app
 COPY --from=frontend-builder --chown=redash /frontend/client/dist /app/client/dist

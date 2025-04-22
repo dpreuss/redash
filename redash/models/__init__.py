@@ -1078,7 +1078,7 @@ class Dashboard(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model
     user_id = Column(key_type("User"), db.ForeignKey("users.id"))
     user = db.relationship(User)
     # layout is no longer used, but kept so we know how to render old dashboards.
-    layout = Column(MutableList.as_mutable(JSONB), default=[])
+    layout = Column(MutableDict.as_mutable(JSONB), default={})
     dashboard_filters_enabled = Column(db.Boolean, default=False)
     is_archived = Column(db.Boolean, default=False, index=True)
     is_draft = Column(db.Boolean, default=True, index=True)

@@ -13,8 +13,19 @@ logger = get_job_logger(__name__)
 
 @job("default")
 def record_event(raw_event):
-    event = models.Event.record(raw_event)
-    models.db.session.commit()
+    try:
+        event = models.Event.record(raw_event)
+        models.db.session.commit()
+    except Exception as e:
+        if 'duplicate key value violates unique constraint' in str(e):
+            # If this is a duplicate event, log it and return gracefully
+            logger.info("Duplicate event detected, skipping: %s", raw_event)
+            models.db.session.rollback()
+            return
+        # For other errors, log and re-raise
+        logger.exception("Failed to record event: %s", raw_event)
+        models.db.session.rollback()
+        raise
 
     for hook in settings.EVENT_REPORTING_WEBHOOKS:
         logger.debug("Forwarding event to: %s", hook)

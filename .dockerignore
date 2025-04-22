@@ -1,14 +1,115 @@
-client/.tmp/
+# Development and IDE files
+.git/
+.github/
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+.DS_Store
+.editorconfig
+.env*
+!.env.example
+.coveragerc
+.pre-commit-config.yaml
+.restyled.yaml
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pytest.ini
+.coverage*
+htmlcov/
+coverage.xml
+
+# Build and dependency directories
 node_modules/
 viz-lib/node_modules/
 .tmp/
 .venv/
 venv/
-.git/
-/.codeclimate.yml
-/.coverage
-/coverage.xml
-/.circleci/
-/.github/
-/netlify.toml
-/setup/
+venv310/
+dist/
+build/
+.yarn/
+*.egg-info/
+
+# Local development files
+pg_data/
+docker_backup_*
+backup_docker*.sh
+dockexp.sh
+redash.sql
+*.log
+*.tar.gz
+
+# Test files
+tests/
+cypress.config.js
+.ci/
+codecov.yml
+
+# Documentation and non-essential files
+*.md
+!README.md
+docs/
+examples/
+setup/
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE*
+SECURITY.md
+netlify.toml
+
+# Cache and temporary files
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+.sass-cache/
+.webpack/
+.next/
+
+# Configuration files not needed in production
+.codeclimate.yml
+.npmrc
+.nvmrc
+
+# Database files
+*.sql
+*.db
+*.sqlite
+
+# Debugging and development scripts
+scripts/debug*
+scripts/test*
+scripts/dev*
+
+# Version control
+.git*
+.hg*
+.svn/
+
+# Local configuration
+compose*.yaml
+!compose.yaml
+compose*.yml
+!compose.yml
+
+# Keep essential files
+!pyproject.toml
+!poetry.lock
+!package.json
+!yarn.lock
+!.yarnrc
+!webpack.config.js
+!bin/
+!manage.py
+!worker.conf
+!client/
+!viz-lib/
+!scripts/
+!client/dist/

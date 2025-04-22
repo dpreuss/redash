@@ -1,9 +1,16 @@
-.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash init_db clean_db
+.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash init_db clean_db update_version
 
-compose_build: .env
+update_version:
+	@echo "Updating version with current timestamp..."
+	@current_time=$$(date "+%Y%m%d%H%M") && \
+	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
+	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
+	rm -f pyproject.toml.bak redash/__init__.py.bak
+
+compose_build: update_version .env
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose build
 
-up:
+up: update_version
 	docker compose up -d redis postgres --remove-orphans
 	docker compose exec -u postgres postgres psql postgres --csv \
 		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
@@ -80,20 +87,23 @@ lint:
 backend-unit-tests: up test_db
 	docker compose run --rm --name tests server tests
 
+# Add yarn configuration
+YARN_CONFIG=yarn --use-yarnrc $(PWD)/.yarnrc
+
 frontend-unit-tests:
-	CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn --frozen-lockfile
-	yarn test
+	CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 $(YARN_CONFIG) --frozen-lockfile
+	$(YARN_CONFIG) test
 
 test: backend-unit-tests frontend-unit-tests lint
 
 build:
-	yarn build
+	$(YARN_CONFIG) build
 
 watch:
-	yarn watch
+	$(YARN_CONFIG) watch
 
 start:
-	yarn start
+	$(YARN_CONFIG) start
 
 redis-cli:
 	docker compose run --rm redis redis-cli -h redis

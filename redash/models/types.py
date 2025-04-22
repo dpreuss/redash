@@ -51,6 +51,11 @@ class MutableDict(Mutable, dict):
         "Convert plain dictionaries to MutableDict."
 
         if not isinstance(value, MutableDict):
+            # Special handling for layout column which used to be a list
+            if key == 'layout' and isinstance(value, list):
+                # Convert list to dict format
+                return MutableDict({})
+            
             if isinstance(value, dict):
                 return MutableDict(value)
 
