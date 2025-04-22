@@ -209,8 +209,10 @@ class DashboardResource(BaseResource):
         :status 409: Version conflict -- dashboard modified since last read
         """
         dashboard_properties = request.get_json(force=True)
-        # TODO: either convert all requests to use slugs or ids
         dashboard = models.Dashboard.get_by_id_and_org(dashboard_id, self.current_org)
+
+        import logging
+        logging.warning(f"[DASHBOARD SAVE] id={dashboard_id} incoming_version={dashboard_properties.get('version')} current_version={dashboard.version} user={getattr(self.current_user, 'id', None)} data={dashboard_properties}")
 
         require_object_modify_permission(dashboard, self.current_user)
 
