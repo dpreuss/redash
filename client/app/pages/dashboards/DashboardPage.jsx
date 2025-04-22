@@ -215,8 +215,9 @@ function DashboardComponent(props) {
     }
   }, [dashboard.layout, debouncedUpdateDashboard]);
     console.log('Comparing normalized layouts:', { normNew, normCurrent });
+    // console.log('Comparing normalized layouts:', { normNew, normCurrent });
     if (!isEqual(normNew, normCurrent)) {
-      console.log('Layout difference:', differenceWith(normNew, normCurrent, isEqual));
+      // console.log('Layout difference:', differenceWith(normNew, normCurrent, isEqual));
       debouncedUpdateDashboard({ layout: newLayout });
     }
   }, [dashboard.layout, debouncedUpdateDashboard]);
