@@ -5,7 +5,6 @@ import { isEmpty } from "lodash";
 import Dropdown from "antd/lib/dropdown";
 import Modal from "antd/lib/modal";
 import Menu from "antd/lib/menu";
-import recordEvent from "@/services/recordEvent";
 import { Moment } from "@/components/proptypes";
 import PlainButton from "@/components/PlainButton";
 
@@ -74,6 +73,7 @@ class Widget extends React.Component {
     menuOptions: PropTypes.node,
     tileProps: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     onDelete: PropTypes.func,
+    onLoad: PropTypes.func,
   };
 
   static defaultProps = {
@@ -87,11 +87,11 @@ class Widget extends React.Component {
     menuOptions: null,
     tileProps: {},
     onDelete: () => {},
+    onLoad: () => {},
   };
 
   componentDidMount() {
-    const { widget } = this.props;
-    recordEvent("view", "widget", widget.id);
+    this.props.onLoad();
   }
 
   deleteWidget = () => {

@@ -85,8 +85,8 @@ export function useDashboard(dashboardData) {
             notification.error("Dashboard update failed", "Permission Denied.");
           } else if (status === 409) {
             notification.error(
-              "It seems like the dashboard has been modified by another user. ",
-              "Please copy/backup your changes and reload this page.",
+              "Dashboard Version Conflict", 
+              "The dashboard has been modified by another user. Please reload the page to get the latest version.",
               { duration: null }
             );
           }
@@ -102,7 +102,6 @@ export function useDashboard(dashboardData) {
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    setDashboard(currentDashboard => extend({}, currentDashboard));
     return widget
       .load(forceRefresh)
       .catch(error => {
@@ -111,8 +110,7 @@ export function useDashboard(dashboardData) {
           return;
         }
         return Promise.reject(error);
-      })
-      .finally(() => setDashboard(currentDashboard => extend({}, currentDashboard)));
+      });
   }, []);
 
   const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
@@ -130,18 +128,18 @@ export function useDashboard(dashboardData) {
 
   const loadDashboard = useCallback(
     (forceRefresh = false, updatedParameters = []) => {
-      const affectedWidgets = getAffectedWidgets(dashboardRef.current.widgets, updatedParameters);
+      const affectedWidgets = getAffectedWidgets(dashboard.widgets, updatedParameters);
       const loadWidgetPromises = compact(
         affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch(error => error))
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
-        const queryResults = compact(map(dashboardRef.current.widgets, widget => widget.getQueryResult()));
-        const updatedFilters = collectDashboardFilters(dashboardRef.current, queryResults, location.search);
+        const queryResults = compact(map(dashboard.widgets, widget => widget.getQueryResult()));
+        const updatedFilters = collectDashboardFilters(dashboard, queryResults, location.search);
         setFilters(updatedFilters);
       });
     },
-    [loadWidget]
+    [dashboard, loadWidget]
   );
 
   const refreshDashboard = useCallback(

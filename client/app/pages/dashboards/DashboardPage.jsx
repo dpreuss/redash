@@ -157,21 +157,19 @@ function DashboardComponent(props) {
   }, [dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
 
   const handleWidgetOptionsChange = widget => {
-    // Find the widget in the dashboard's widgets array
     const index = dashboard.widgets.findIndex(w => w.id === widget.id);
     if (index >= 0) {
-      // Create a new widget array to trigger a re-render
-      const updatedWidgets = [...dashboard.widgets];
-      updatedWidgets[index] = widget;
-      
-      // Update the dashboard with both the new widgets array and the current version
-      updateDashboard({ 
-        widgets: updatedWidgets,
-        version: dashboard.version 
-      }).catch(() => {
-        // If save fails, refresh the dashboard to get the latest version
-        window.location.reload();
-      });
+      const currentWidget = dashboard.widgets[index];
+      if (!isEqual(currentWidget.options, widget.options)) {
+        const updatedWidgets = [...dashboard.widgets];
+        updatedWidgets[index] = widget;
+        updateDashboard({ 
+          widgets: updatedWidgets,
+          version: dashboard.version 
+        }).catch(() => {
+          window.location.reload();
+        });
+      }
     }
   };
 

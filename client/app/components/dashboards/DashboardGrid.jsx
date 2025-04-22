@@ -196,12 +196,22 @@ class DashboardGrid extends React.Component {
       return;
     }
 
+    // Convert layout to object format expected by the model
     const normalized = chain(layouts[MULTI])
       .keyBy("i")
-      .mapValues(this.normalizeTo)
+      .mapValues(item => ({
+        col: item.x,
+        row: item.y,
+        sizeX: item.w,
+        sizeY: item.h,
+        autoHeight: this.autoHeightCtrl.exists(item.i),
+      }))
       .value();
 
-    this.props.onLayoutChange(normalized);
+    // Ensure we're passing an object, not an array
+    if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+      this.props.onLayoutChange(normalized);
+    }
   };
 
   onBreakpointChange = mode => {
