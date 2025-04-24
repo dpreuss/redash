@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import cx from "classnames";
 import { isEmpty, debounce } from "lodash";
 
+import { isEmpty, debounce, isEqual } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -14,7 +15,6 @@ import recordEvent from "@/services/recordEvent";
 import routes from "@/services/routes";
 import location from "@/services/location";
 import url from "@/services/url";
-import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 import { useDashboard } from "./hooks/useDashboard";
 
@@ -114,6 +114,25 @@ AddWidgetContainer.propTypes = {
   className: PropTypes.string,
 };
 
+export function normalizeLayout(layout) {
+  // Convert dict/object to array if needed
+  if (!Array.isArray(layout) && typeof layout === "object" && layout !== null) {
+    layout = Object.values(layout);
+  }
+  if (!Array.isArray(layout)) return [];
+  return layout
+    .filter(item => item && typeof item.i === "string")
+    .map(item => ({
+      i: item.i,
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+      // add more keys if needed
+    }))
+    .sort((a, b) => a.i.localeCompare(b.i));
+}
+
 function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
   const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard } = dashboardConfiguration;
@@ -153,6 +172,23 @@ function DashboardComponent(props) {
       document.removeEventListener("visibilitychange", refreshDashboardIfNeeded);
     };
   }, [dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
+
+  const onParameterMappingsChange = useCallback(() => {
+    // Refresh dashboard when parameter mappings change
+    refreshDashboard();
+  }, [refreshDashboard]);
+
+  // Only update dashboard if layout has changed, and debounce the save
+  const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
+  const handleLayoutChange = useCallback((newLayout) => {
+    const normNew = normalizeLayout(newLayout);
+    const normCurrent = normalizeLayout(dashboard.layout);
+    
+    if (!isEqual(normNew, normCurrent)) {
+      Object.freeze(normNew);
+      debouncedUpdateDashboard({ layout: normNew });
+    }
+  }, [dashboard.layout, debouncedUpdateDashboard]);
 
   return (
     <>
@@ -198,6 +234,10 @@ function DashboardComponent(props) {
           onRemoveWidget={removeWidget}
           onBreakpointChange={setGridDisabled}
           onLayoutChange={layout => updateDashboard({ layout })}
+          onLayoutChange={handleLayoutChange}
+          onParameterMappingsChange={onParameterMappingsChange}
+          isPublic={isPublic}
+          isLoading={refreshing}
         />
       </div>
       {editingLayout && (
@@ -225,7 +265,7 @@ DashboardComponent.defaultProps = {
 
 function DashboardPage({ dashboardSlug, dashboardId, onError }) {
   const [dashboard, setDashboard] = useState(null);
-  const handleError = useImmutableCallback(onError);
+  const handleError = onError;
 
   useEffect(() => {
     Dashboard.get({ id: dashboardId, slug: dashboardSlug })

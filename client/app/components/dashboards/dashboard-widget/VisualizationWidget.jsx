@@ -16,9 +16,9 @@ import { Moment } from "@/components/proptypes";
 import QueryLink from "@/components/QueryLink";
 import { FiltersType } from "@/components/Filters";
 import PlainButton from "@/components/PlainButton";
-import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
+import { registeredVisualizations } from "@redash/viz/lib";
 
 import Widget from "./Widget";
 
@@ -120,7 +120,13 @@ function VisualizationWidgetHeader({
   onParametersUpdate,
   onParametersEdit,
 }) {
-  const canViewQuery = currentUser.hasPermission("view_query");
+  const vizConfig = registeredVisualizations[widget.visualization.type];
+  const chartName = widget.visualization.name;
+  const defaultName = vizConfig ? vizConfig.name : "";
+  const queryName = widget.getQuery().name;
+  const description = widget.getQuery().description;
+  const hasChartName = chartName && chartName !== defaultName;
+  const showDescription = !!description && description.trim() !== "";
 
   return (
     <>
@@ -135,6 +141,20 @@ function VisualizationWidgetHeader({
               {markdown.toHTML(widget.getQuery().description || "")}
             </HtmlContent>
           )}
+          <span>
+            {hasChartName ? chartName : queryName}
+            {showHeader && hasChartName && queryName && (
+              <span> - {queryName}</span>
+            )}
+            {showHeader && showDescription && (
+              <>
+                <span> - </span>
+                <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
+                  {markdown.toHTML(description)}
+                </HtmlContent>
+              </>
+            )}
+          </span>
         </div>
       </div>
       {!isEmpty(parameters) && (
@@ -284,6 +304,74 @@ class VisualizationWidget extends React.Component {
   expandWidget = () => {
     ExpandedWidgetDialog.showModal({ widget: this.props.widget, filters: this.state.localFilters });
   };
+  visualizationWidgetMenuOptions = () => {
+    const { widget, canEdit } = this.props;
+    const { showHeader } = this.state;
+    const { onRefresh, onParameterMappingsChange } = this.props;
+
+    const canEditParameters = canEdit && !isEmpty(invoke(widget, "query.getParametersDefs"));
+    const widgetQueryResult = widget.getQueryResult();
+    const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
+
+    const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType);
+    const downloadName = fileType => widgetQueryResult.getName(widget.getQuery().name, fileType);
+
+    const toggleHeader = () => {
+      const newOptions = {
+        ...widget.options,
+        showHeader: !showHeader,
+      };
+      widget.save('options', newOptions).then(() => {
+        this.setState({ showHeader: !showHeader });
+        if (typeof onRefresh === 'function') {
+          onRefresh();
+        }
+        if (typeof onParameterMappingsChange === 'function') {
+          onParameterMappingsChange();
+        }
+      });
+    };
+
+    return compact([
+      <Menu.Item key="toggle_header" onClick={toggleHeader}>
+        {showHeader ? "Hide Query" : "Show Query"}
+      </Menu.Item>,
+      <Menu.Divider key="divider1" />,
+      <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
+        {!isQueryResultEmpty ? (
+          <Link href={downloadLink("csv")} download={downloadName("csv")} target="_self">
+            Download as CSV File
+          </Link>
+        ) : (
+          "Download as CSV File"
+        )}
+      </Menu.Item>,
+      <Menu.Item key="download_tsv" disabled={isQueryResultEmpty}>
+        {!isQueryResultEmpty ? (
+          <Link href={downloadLink("tsv")} download={downloadName("tsv")} target="_self">
+            Download as TSV File
+          </Link>
+        ) : (
+          "Download as TSV File"
+        )}
+      </Menu.Item>,
+      <Menu.Item key="download_excel" disabled={isQueryResultEmpty}>
+        {!isQueryResultEmpty ? (
+          <Link href={downloadLink("xlsx")} download={downloadName("xlsx")} target="_self">
+            Download as Excel File
+          </Link>
+        ) : (
+          "Download as Excel File"
+        )}
+      </Menu.Item>,
+      (canEditParameters) && <Menu.Divider key="divider2" />,
+      canEditParameters && (
+        <Menu.Item key="edit_parameters" onClick={this.editParameterMappings}>
+          Edit Parameter Mapping
+        </Menu.Item>
+      ),
+    ]);
+  }
 
   editParameterMappings = () => {
     const { widget, dashboard, onRefresh, onParameterMappingsChange } = this.props;
@@ -308,6 +396,33 @@ class VisualizationWidget extends React.Component {
       onRefresh();
       this.forceUpdate();
     });
+  };
+
+  getParameters() {
+    try {
+      const { widget, filters } = this.props;
+      const { localParameters } = this.state;
+      return invoke(widget, 'getParameters', filters, localParameters);
+    } catch (error) {
+      // Handle error silently
+      return [];
+    }
+  }
+
+  onParametersUpdate = () => {
+    this.props.onRefresh();
+  };
+
+  expandWidget = () => {
+    this.setState({ showExpandedWidget: true });
+  };
+
+  onRefresh = () => {
+    return this.props.onRefresh();
+  };
+
+  unregisterWidget = () => {
+    // Clean up code if needed
   };
 
   renderVisualization() {
@@ -375,6 +490,40 @@ class VisualizationWidget extends React.Component {
         header={
           showHeader ? (
             <VisualizationWidgetHeader
+    const { widget, isPublic, /* canEdit, isLoading: isLoadingWidget */ } = this.props; // Commented out unused destructured props
+    const {
+      // isLoading: isLoadingData, // Unused state variable
+      // isError, // Unused state variable
+      // error, // Unused state variable
+      refreshStartedAt,
+      // showParameterMappingsForm, // Unused state variable
+      // showExpandedWidget, // Unused state variable
+      showHeader,
+    } = this.state;
+
+    const widgetQueryResult = widget.getQueryResult();
+    const isRefreshing = !!(widget.loading && widgetQueryResult && widgetQueryResult.getStatus());
+    const parameters = this.getParameters();
+
+    return (
+      <>
+        <Widget
+          {...this.props}
+          className="widget-visualization"
+          menuOptions={this.visualizationWidgetMenuOptions()}
+          header={
+            <VisualizationWidgetHeader
+              widget={widget}
+              refreshStartedAt={refreshStartedAt}
+              parameters={parameters}
+              isEditing={this.props.isEditing}
+              onParametersUpdate={this.onParametersUpdate}
+              onParametersEdit={this.onParametersEdit}
+              showHeader={showHeader}
+            />
+          }
+          footer={
+            <VisualizationWidgetFooter
               widget={widget}
               refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
               parameters={localParameters}

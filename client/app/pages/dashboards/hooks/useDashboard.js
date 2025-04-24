@@ -17,6 +17,7 @@ import useRefreshRateHandler from "./useRefreshRateHandler";
 import useEditModeHandler, { DashboardStatusEnum } from "./useEditModeHandler";
 import useDuplicateDashboard from "./useDuplicateDashboard";
 import { policy } from "@/services/policy";
+import { normalizeLayout } from "../DashboardPage";
 
 export { DashboardStatusEnum };
 
@@ -67,6 +68,10 @@ export function useDashboard(dashboardData) {
 
   const updateDashboard = useCallback(
     (data, includeVersion = true) => {
+      // Normalize layout if present
+      if (data.layout) {
+        data.layout = normalizeLayout(data.layout);
+      }
       setDashboard(currentDashboard => extend({}, currentDashboard, data));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {

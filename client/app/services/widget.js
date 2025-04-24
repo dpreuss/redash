@@ -196,6 +196,8 @@ class Widget {
 
     return axios.post(url, data).then(data => {
       each(data, (v, k) => {
+    return axios.post(url, data).then(response => {
+      each(response.data, (v, k) => {
         this[k] = v;
       });
 
