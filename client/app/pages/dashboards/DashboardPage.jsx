@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
-import { isEmpty, debounce, isEqual, differenceWith } from "lodash";
+import { isEmpty, debounce, isEqual } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -13,24 +13,10 @@ import recordEvent from "@/services/recordEvent";
 import routes from "@/services/routes";
 import location from "@/services/location";
 import url from "@/services/url";
-import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 import { useDashboard } from "./hooks/useDashboard";
 
 import "./DashboardPage.less";
-
-// Add deepFreeze function at the top level, outside the component
-function deepFreeze(obj) {
-  Object.freeze(obj);
-  Object.getOwnPropertyNames(obj).forEach(function(prop) {
-    if (obj[prop] !== null 
-        && (typeof obj[prop] === 'object' || typeof obj[prop] === 'function')
-        && !Object.isFrozen(obj[prop])) {
-      deepFreeze(obj[prop]);
-    }
-  });
-  return obj;
-}
 
 function DashboardSettings({ dashboard, updateDashboard }) {
   const [localBackgroundColor, setLocalBackgroundColor] = useState(
@@ -128,17 +114,23 @@ AddWidgetContainer.propTypes = {
   className: PropTypes.string,
 };
 
-function normalizeLayout(layout) {
-  // Only keep keys that matter for layout comparison
-  if (!Array.isArray(layout)) return layout;
-  return layout.map(item => ({
-    i: item.i,
-    x: item.x,
-    y: item.y,
-    w: item.w,
-    h: item.h,
-    // add more keys if needed
-  })).sort((a, b) => a.i.localeCompare(b.i));
+export function normalizeLayout(layout) {
+  // Convert dict/object to array if needed
+  if (!Array.isArray(layout) && typeof layout === "object" && layout !== null) {
+    layout = Object.values(layout);
+  }
+  if (!Array.isArray(layout)) return [];
+  return layout
+    .filter(item => item && typeof item.i === "string")
+    .map(item => ({
+      i: item.i,
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+      // add more keys if needed
+    }))
+    .sort((a, b) => a.i.localeCompare(b.i));
 }
 
 function DashboardComponent(props) {
@@ -182,28 +174,6 @@ function DashboardComponent(props) {
     };
   }, [dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
 
-  const handleWidgetOptionsChange = widget => {
-    const index = dashboard.widgets.findIndex(w => w.id === widget.id);
-    if (index >= 0) {
-      const currentWidget = dashboard.widgets[index];
-      if (!isEqual(currentWidget.options, widget.options)) {
-        const updatedWidgets = [...dashboard.widgets];
-        updatedWidgets[index] = widget;
-        updateDashboard({ 
-          widgets: updatedWidgets,
-          version: dashboard.version 
-        }).catch(() => {
-          window.location.reload();
-        });
-      }
-    }
-  };
-
-  const onWidgetSizeChange = useCallback((widget, newSize) => {
-    widget.options = { ...widget.options, ...newSize };
-    updateDashboard({ widgets: [...dashboard.widgets] });
-  }, [dashboard.widgets, updateDashboard]);
-
   const onParameterMappingsChange = useCallback(() => {
     // Refresh dashboard when parameter mappings change
     refreshDashboard();
@@ -214,15 +184,12 @@ function DashboardComponent(props) {
   const handleLayoutChange = useCallback((newLayout) => {
     const normNew = normalizeLayout(newLayout);
     const normCurrent = normalizeLayout(dashboard.layout);
-    // console.log('Comparing normalized layouts:', { normNew, normCurrent });
+    
     if (!isEqual(normNew, normCurrent)) {
-      // console.log('Layout difference:', differenceWith(normNew, normCurrent, isEqual));
-      debouncedUpdateDashboard({ layout: newLayout });
+      Object.freeze(normNew);
+      debouncedUpdateDashboard({ layout: normNew });
     }
   }, [dashboard.layout, debouncedUpdateDashboard]);
-
-  // Deep freeze the layout before passing to DashboardGrid
-  const frozenLayout = useMemo(() => deepFreeze(dashboard.layout), [dashboard.layout]);
 
   return (
     <>
@@ -268,14 +235,9 @@ function DashboardComponent(props) {
           onRemoveWidget={removeWidget}
           onBreakpointChange={setGridDisabled}
           onLayoutChange={handleLayoutChange}
-          onWidgetSizeChange={onWidgetSizeChange}
           onParameterMappingsChange={onParameterMappingsChange}
-          onOptionsChange={handleWidgetOptionsChange}
           isPublic={isPublic}
           isLoading={refreshing}
-          onRefresh={refreshDashboard}
-          backgroundColor={dashboard.options?.backgroundColor}
-          layout={frozenLayout}
         />
       </div>
       {editingLayout && (
@@ -303,7 +265,7 @@ DashboardComponent.defaultProps = {
 
 function DashboardPage({ dashboardSlug, dashboardId, onError }) {
   const [dashboard, setDashboard] = useState(null);
-  const handleError = useImmutableCallback(onError);
+  const handleError = onError;
 
   useEffect(() => {
     Dashboard.get({ id: dashboardId, slug: dashboardSlug })

@@ -203,8 +203,6 @@ class Widget {
       url = `${url}/${this.id}`;
     }
 
-    // console.log('[widget.save] called for widget:', this.id, 'url:', url, 'data:', data);
-    console.trace('[widget.save] call stack');
     return axios.post(url, data).then(response => {
       each(response.data, (v, k) => {
         this[k] = v;

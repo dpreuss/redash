@@ -6,7 +6,6 @@ import cx from "classnames";
 import Menu from "antd/lib/menu";
 import notification from "antd/lib/notification";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
-import { currentUser } from "@/services/auth";
 import { formatDateTime } from "@/lib/utils";
 import Link from "@/components/Link";
 import Parameters from "@/components/Parameters";
@@ -15,10 +14,9 @@ import Timer from "@/components/Timer";
 import { Moment } from "@/components/proptypes";
 import { FiltersType } from "@/components/Filters";
 import PlainButton from "@/components/PlainButton";
-import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
-import VisualizationName from "@/components/visualizations/VisualizationName";
+import { registeredVisualizations } from "@redash/viz/lib";
 
 import Widget from "./Widget";
 
@@ -46,7 +44,13 @@ function VisualizationWidgetHeader({
   onParametersEdit,
   showHeader,
 }) {
-  const canViewQuery = currentUser.hasPermission("view_query");
+  const vizConfig = registeredVisualizations[widget.visualization.type];
+  const chartName = widget.visualization.name;
+  const defaultName = vizConfig ? vizConfig.name : "";
+  const queryName = widget.getQuery().name;
+  const description = widget.getQuery().description;
+  const hasChartName = chartName && chartName !== defaultName;
+  const showDescription = !!description && description.trim() !== "";
 
   return (
     <>
@@ -54,20 +58,19 @@ function VisualizationWidgetHeader({
       <div className="t-header widget clearfix">
         <div className="th-title">
           <span>
-            <VisualizationName visualization={widget.visualization} />
-          </span>
-          {showHeader && (
-            <>
-              <p>
-                <span>{widget.getQuery().name}</span>
-              </p>
-              {!isEmpty(widget.getQuery().description) && (
-                <HtmlContent className="text-muted markdown query--description">
-                  {markdown.toHTML(widget.getQuery().description || "")}
+            {hasChartName ? chartName : queryName}
+            {showHeader && hasChartName && queryName && (
+              <span> - {queryName}</span>
+            )}
+            {showHeader && showDescription && (
+              <>
+                <span> - </span>
+                <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
+                  {markdown.toHTML(description)}
                 </HtmlContent>
-              )}
-            </>
-          )}
+              </>
+            )}
+          </span>
         </div>
       </div>
       {!isEmpty(parameters) && (
@@ -230,7 +233,6 @@ class VisualizationWidget extends React.Component {
     const { showHeader } = this.state;
     const { onRefresh, onParameterMappingsChange } = this.props;
 
-    const canViewQuery = currentUser.hasPermission("view_query");
     const canEditParameters = canEdit && !isEmpty(invoke(widget, "query.getParametersDefs"));
     const widgetQueryResult = widget.getQueryResult();
     const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
@@ -256,7 +258,7 @@ class VisualizationWidget extends React.Component {
 
     return compact([
       <Menu.Item key="toggle_header" onClick={toggleHeader}>
-        {showHeader ? "Hide Header" : "Show Header"}
+        {showHeader ? "Hide Query" : "Show Query"}
       </Menu.Item>,
       <Menu.Divider key="divider1" />,
       <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
@@ -286,12 +288,7 @@ class VisualizationWidget extends React.Component {
           "Download as Excel File"
         )}
       </Menu.Item>,
-      (canViewQuery || canEditParameters) && <Menu.Divider key="divider2" />,
-      canViewQuery && (
-        <Menu.Item key="view_query">
-          <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>
-        </Menu.Item>
-      ),
+      (canEditParameters) && <Menu.Divider key="divider2" />,
       canEditParameters && (
         <Menu.Item key="edit_parameters" onClick={this.editParameterMappings}>
           Edit Parameter Mapping
@@ -331,6 +328,33 @@ class VisualizationWidget extends React.Component {
     }).catch(() => {
       notification.error("Could not save parameter order.");
     });
+  };
+
+  getParameters() {
+    try {
+      const { widget, filters } = this.props;
+      const { localParameters } = this.state;
+      return invoke(widget, 'getParameters', filters, localParameters);
+    } catch (error) {
+      // Handle error silently
+      return [];
+    }
+  }
+
+  onParametersUpdate = () => {
+    this.props.onRefresh();
+  };
+
+  expandWidget = () => {
+    this.setState({ showExpandedWidget: true });
+  };
+
+  onRefresh = () => {
+    return this.props.onRefresh();
+  };
+
+  unregisterWidget = () => {
+    // Clean up code if needed
   };
 
   renderVisualization() {
@@ -378,22 +402,20 @@ class VisualizationWidget extends React.Component {
   }
 
   render() {
-    const { widget, isPublic, canEdit, isLoading: isLoadingWidget } = this.props;
+    const { widget, isPublic, /* canEdit, isLoading: isLoadingWidget */ } = this.props; // Commented out unused destructured props
     const {
-      isLoading: isLoadingData,
-      isError,
-      error,
-      localParameters,
+      // isLoading: isLoadingData, // Unused state variable
+      // isError, // Unused state variable
+      // error, // Unused state variable
       refreshStartedAt,
-      showParameterMappingsForm,
-      showExpandedWidget,
+      // showParameterMappingsForm, // Unused state variable
+      // showExpandedWidget, // Unused state variable
       showHeader,
     } = this.state;
 
     const widgetQueryResult = widget.getQueryResult();
-    const isRefreshing = refreshStartedAt !== null;
-    const parameters = [...this.getParameters(), ...(localParameters || [])];
-    const headerVisible = showHeader;
+    const isRefreshing = !!(widget.loading && widgetQueryResult && widgetQueryResult.getStatus());
+    const parameters = this.getParameters();
 
     return (
       <>
@@ -402,16 +424,15 @@ class VisualizationWidget extends React.Component {
           className="widget-visualization"
           menuOptions={this.visualizationWidgetMenuOptions()}
           header={
-            headerVisible && (
-              <VisualizationWidgetHeader
-                widget={widget}
-                refreshStartedAt={refreshStartedAt}
-                parameters={parameters}
-                isEditing={this.props.isEditing}
-                onParametersUpdate={this.onParametersUpdate}
-                onParametersEdit={this.onParametersEdit}
-              />
-            )
+            <VisualizationWidgetHeader
+              widget={widget}
+              refreshStartedAt={refreshStartedAt}
+              parameters={parameters}
+              isEditing={this.props.isEditing}
+              onParametersUpdate={this.onParametersUpdate}
+              onParametersEdit={this.onParametersEdit}
+              showHeader={showHeader}
+            />
           }
           footer={
             <VisualizationWidgetFooter

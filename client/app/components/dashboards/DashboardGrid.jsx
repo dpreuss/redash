@@ -183,7 +183,9 @@ class DashboardGrid extends React.Component {
     // fixes test dashboard_spec['shows widgets with full width']
     // TODO: open react-grid-layout issue
     if (layouts[MULTI]) {
-      this.setState({ layouts });
+      // Create a deep copy of layouts to prevent mutation
+      const newLayouts = JSON.parse(JSON.stringify(layouts));
+      this.setState({ layouts: newLayouts });
     }
 
     // workaround for https://github.com/STRML/react-grid-layout/issues/889
@@ -210,7 +212,9 @@ class DashboardGrid extends React.Component {
 
     // Ensure we're passing an object, not an array
     if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
-      this.props.onLayoutChange(normalized);
+      // Create an immutable copy before passing to parent
+      const immutableLayout = Object.freeze({ ...normalized });
+      this.props.onLayoutChange(immutableLayout);
     }
   };
 
@@ -241,14 +245,6 @@ class DashboardGrid extends React.Component {
 
     this.autoHeightCtrl.resume();
   };
-
-  normalizeTo = layout => ({
-    col: layout.x,
-    row: layout.y,
-    sizeX: layout.w,
-    sizeY: layout.h,
-    autoHeight: this.autoHeightCtrl.exists(layout.i),
-  });
 
   render() {
     const {
