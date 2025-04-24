@@ -15,12 +15,15 @@ import {
   indexOf,
   size,
   includes,
+  isArray,
 } from "lodash";
 import location from "@/services/location";
 import { cloneParameter } from "@/services/parameters";
 import dashboardGridOptions from "@/config/dashboard-grid-options";
 import { registeredVisualizations } from "@redash/viz/lib";
 import { Query } from "./query";
+import { Parameter } from "@/services/parameters";
+import { ParameterMappingType } from "@/services/widget-parameters";
 
 export const WidgetTypeEnum = {
   TEXTBOX: "textbox",
@@ -86,17 +89,10 @@ function calculatePositionOptions(widget) {
   return visualizationOptions;
 }
 
-export const ParameterMappingType = {
-  DashboardLevel: "dashboard-level",
-  WidgetLevel: "widget-level",
-  StaticValue: "static-value",
-};
-
 class Widget {
   static MappingType = ParameterMappingType;
 
   constructor(data) {
-    // Copy properties
     extend(this, data);
 
     const visualizationOptions = calculatePositionOptions(this);
@@ -111,6 +107,10 @@ class Widget {
     if (this.options.position.sizeY < 0) {
       this.options.position.autoHeight = true;
     }
+
+    if (isObject(this.options) && !isArray(this.options)) {
+      this.options = JSON.stringify(this.options);
+    }
   }
 
   get type() {
@@ -124,21 +124,20 @@ class Widget {
 
   getQuery() {
     if (!this.query && this.visualization) {
-      this.query = new Query(this.visualization.query);
+      this.query = this.visualization.query;
     }
-
     return this.query;
   }
 
   getQueryResult() {
-    return this.data;
+    return this.query_result || this.getQuery().getQueryResult();
   }
 
   getName() {
     if (this.visualization) {
       return `${this.visualization.query.name} (${this.visualization.name})`;
     }
-    return truncate(this.text, 20);
+    return this.text;
   }
 
   load(force, maxAge) {
@@ -146,58 +145,25 @@ class Widget {
       return Promise.resolve();
     }
 
-    // Both `this.data` and `this.queryResult` are query result objects;
-    // `this.data` is last loaded query result;
-    // `this.queryResult` is currently loading query result;
-    // while widget is refreshing, `this.data` !== `this.queryResult`
-
-    if (force || this.queryResult === undefined) {
-      this.loading = true;
-      this.refreshStartedAt = moment();
-
-      if (maxAge === undefined || force) {
-        maxAge = force ? 0 : undefined;
-      }
-
-      const queryResult = this.getQuery().getQueryResult(maxAge);
-      this.queryResult = queryResult;
-
-      queryResult
-        .toPromise()
-        .then(result => {
-          if (this.queryResult === queryResult) {
-            this.loading = false;
-            this.data = result;
-          }
-          return result;
-        })
-        .catch(error => {
-          if (this.queryResult === queryResult) {
-            this.loading = false;
-            this.data = error;
-          }
-          return error;
-        });
+    // Both `this.query` and `this.visualization.query` are the same object, but `this.query` might be null if not
+    // assigned yet. In this case, load from `this.visualization.query` but update `this.query` too, so on the
+    // next call to load, the condition above will return false and this block will be skipped.
+    if (!this.query && this.visualization.query) {
+      this.query = this.visualization.query;
     }
 
-    return this.queryResult.toPromise();
+    return this.query.getQueryResult(force, maxAge).then(queryResult => {
+      this.query_result = queryResult;
+      return queryResult;
+    });
   }
 
-  save(key, value) {
-    const data = pick(this, "options", "text", "id", "width", "dashboard_id", "visualization_id");
-    if (key && value) {
-      data[key] = merge({}, data[key], value); // done like this so `this.options` doesn't get updated by side-effect
-    }
-
+  save(data = {}) {
     let url = "api/widgets";
     if (this.id) {
       url = `${url}/${this.id}`;
     }
 
-    return axios.post(url, data).then(data => {
-      each(data, (v, k) => {
-    // console.log('[widget.save] called for widget:', this.id, 'url:', url, 'data:', data);
-    console.trace('[widget.save] call stack');
     return axios.post(url, data).then(response => {
       each(response.data, (v, k) => {
         this[k] = v;
@@ -213,78 +179,41 @@ class Widget {
   }
 
   isStaticParam(param) {
-    const mappings = this.getParameterMappings();
-    const mappingType = mappings[param.name].type;
-    return mappingType === Widget.MappingType.StaticValue;
+    return !this.getQuery().getParametersDefs().some(p => p.name === param);
   }
 
   getParametersDefs() {
-    const mappings = this.getParameterMappings();
-    // textboxes does not have query
-    const params = this.getQuery() ? this.getQuery().getParametersDefs() : [];
+    const parameters = [];
+    if (this.getQuery()) {
+      parameters.push(...this.getQuery().getParametersDefs());
+    }
+    return parameters;
+  }
 
-    const queryParams = location.search;
+  getParameters() {
+    if (!this.getQuery()) {
+      return [];
+    }
 
-    const localTypes = [Widget.MappingType.WidgetLevel, Widget.MappingType.StaticValue];
-    const localParameters = map(
-      filter(params, param => localTypes.indexOf(mappings[param.name].type) >= 0),
-      param => {
-        const mapping = mappings[param.name];
-        const result = cloneParameter(param);
-        result.title = mapping.title || param.title;
-        result.locals = [param];
-        result.urlPrefix = `p_w${this.id}_`;
-        if (mapping.type === Widget.MappingType.StaticValue) {
-          result.setValue(mapping.value);
-        } else {
-          result.fromUrlParams(queryParams);
-        }
-        return result;
+    const parametersDefs = this.getQuery().getParametersDefs();
+    const parameters = [];
+
+    each(this.getParameterMappings(), mapping => {
+      const param = parametersDefs.find(p => p.name === mapping.name);
+      if (param) {
+        const result = Parameter.create(param, mapping);
+        parameters.push(result);
       }
-    );
+    });
 
-    // order widget params using paramOrder
-    return sortBy(localParameters, param =>
-      includes(this.options.paramOrder, param.name)
-        ? indexOf(this.options.paramOrder, param.name)
-        : size(this.options.paramOrder)
-    );
+    return parameters;
   }
 
   getParameterMappings() {
-    if (!isObject(this.options.parameterMappings)) {
-      this.options.parameterMappings = {};
+    if (!isObject(this.options)) {
+      this.options = JSON.parse(this.options);
     }
-
-    const existingParams = {};
-    // textboxes does not have query
-    const params = this.getQuery() ? this.getQuery().getParametersDefs(false) : [];
-    each(params, param => {
-      existingParams[param.name] = true;
-      if (!isObject(this.options.parameterMappings[param.name])) {
-        // "migration" for old dashboards: parameters with `global` flag
-        // should be mapped to a dashboard-level parameter with the same name
-        this.options.parameterMappings[param.name] = {
-          name: param.name,
-          type: param.global ? Widget.MappingType.DashboardLevel : Widget.MappingType.WidgetLevel,
-          mapTo: param.name, // map to param with the same name
-          value: null, // for StaticValue
-          title: "", // Use parameter's title
-        };
-      }
-    });
-
-    // Remove mappings for parameters that do not exists anymore
-    const removedParams = difference(keys(this.options.parameterMappings), keys(existingParams));
-    each(removedParams, name => {
-      delete this.options.parameterMappings[name];
-    });
-
-    return this.options.parameterMappings;
-  }
-
-  getLocalParameters() {
-    return filter(this.getParametersDefs(), param => !this.isStaticParam(param));
+    return this.options.parameterMappings || [];
   }
 }
 
