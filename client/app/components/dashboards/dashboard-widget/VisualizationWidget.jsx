@@ -331,6 +331,10 @@ class VisualizationWidget extends React.Component {
     this.props.onRefresh();
   };
 
+  expandWidget = () => {
+    this.setState({ showExpandedWidget: true });
+  };
+
   onRefresh = () => {
     return this.props.onRefresh();
   };
