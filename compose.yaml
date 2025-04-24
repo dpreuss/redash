@@ -38,6 +38,8 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   scheduler:
     <<: *redash-service
     command: dev_scheduler
@@ -45,6 +47,8 @@ services:
       - server
     environment:
       <<: *redash-environment
+    volumes:
+      - ./:/app
   worker:
     <<: *redash-service
     command: dev_worker
@@ -53,6 +57,8 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   redis:
     image: redis:7-alpine
     restart: unless-stopped

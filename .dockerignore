@@ -42,6 +42,7 @@ docker_backup_*
 backup_docker*.sh
 dockexp.sh
 redash.sql
+redashpg_init/
 *.log
 *.tar.gz
 

@@ -19,6 +19,9 @@ _build
 .vscode
 .env
 .tool-versions
+redash.sql
+cleanup_layouts.py
+run_web_interface.py
 
 dump.rdb
 

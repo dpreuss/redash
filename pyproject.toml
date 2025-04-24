@@ -12,7 +12,11 @@ force-exclude = '''
 
 [tool.poetry]
 name = "redash"
+<<<<<<< HEAD
 version = "25.2.0.dev202504221548"
+=======
+version = "25.2.0.dev202504241213"
+>>>>>>> 1f75062d (Misc changes)
 description = "Make Your Company Data Driven. Connect to any data source, easily visualize, dashboard and share your data."
 authors = ["Arik Fraimovich <arik@redash.io>"]
 # to be added to/removed from the mailing list, please reach out to Arik via the above email or Discord

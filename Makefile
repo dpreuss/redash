@@ -12,9 +12,9 @@ compose_build: update_version .env
 
 up: update_version
 	docker compose up -d redis postgres --remove-orphans
-	docker compose exec -u postgres postgres psql postgres --csv \
-		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
-		| grep -q "organizations" || make init_db
+#	docker compose exec -u postgres postgres psql postgres --csv \
+#		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
+#		| grep -q "organizations" || make init_db
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose up -d --build --remove-orphans
 
 clean_db:
