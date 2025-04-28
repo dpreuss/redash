@@ -65,7 +65,7 @@ function DashboardSettings({ dashboard, updateDashboard }) {
               <span>Use Dashboard Level Filters</span>
             </label>
           </div>
-          <div className="form-group dashboard-settings-color">
+          <div className="form-group dashboard-settings-color align-right">
             <label htmlFor="dashboard-background-color">Background Color</label>
             <input
               id="dashboard-background-color"
@@ -182,10 +182,33 @@ function DashboardComponent(props) {
   // Only update dashboard if layout has changed, and debounce the save
   const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
   const handleLayoutChange = useCallback((newLayout) => {
-    const normNew = normalizeLayout(newLayout);
+    // Convert object to array if needed
+    let layoutArray = newLayout;
+    if (!Array.isArray(newLayout) && typeof newLayout === "object" && newLayout !== null) {
+      layoutArray = Object.entries(newLayout).map(([i, pos]) => ({
+        i,
+        x: pos.col,
+        y: pos.row,
+        w: pos.sizeX,
+        h: pos.sizeY
+      }));
+    }
+    // console.log('[handleLayoutChange] layoutArray:', layoutArray);
+    const normNew = normalizeLayout(layoutArray);
     const normCurrent = normalizeLayout(dashboard.layout);
-    
-    if (!isEqual(normNew, normCurrent)) {
+
+    // Check if any positions have actually changed
+    const hasPositionChanges = normNew.some(newItem => {
+      const currentItem = normCurrent.find(c => c.i === newItem.i);
+      if (!currentItem) return true;
+      return newItem.x !== currentItem.x || 
+             newItem.y !== currentItem.y || 
+             newItem.w !== currentItem.w || 
+             newItem.h !== currentItem.h;
+    });
+
+    if (hasPositionChanges) {
+      // console.log('[handleLayoutChange] Saving dashboard layout changes');
       Object.freeze(normNew);
       debouncedUpdateDashboard({ layout: normNew });
     }
