@@ -216,6 +216,17 @@ export function useDashboard(dashboardData) {
   useEffect(() => {
     setDashboard(dashboardData);
     loadDashboard();
+    // Initialize layout if empty
+    if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
+      const initialLayout = dashboardData.widgets.map(widget => ({
+        i: widget.id.toString(),
+        x: widget.options.position.col,
+        y: widget.options.position.row,
+        w: widget.options.position.sizeX,
+        h: widget.options.position.sizeY,
+      }));
+      setDashboard(currentDashboard => ({ ...currentDashboard, layout: initialLayout }));
+    }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
