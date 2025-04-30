@@ -14,6 +14,33 @@
     height: 36px;
   }
 
+  // Add background color to form controls
+  .ant-form-item, .ant-select-selector, .ant-input, .ant-input-number, 
+  .ant-picker, .ant-input-group-addon, .ant-btn {
+    background-color: var(--dashboard-background-color, white);
+  }
+  
+  // Add background to dropdown menus
+  .ant-select-dropdown {
+    background-color: var(--dashboard-background-color, white);
+  }
+  
+  // Target input field inside date pickers
+  .ant-picker-input > input {
+    background-color: var(--dashboard-background-color, white);
+  }
+
+  // Target dropdown options
+  .ant-select-item {
+    background-color: var(--dashboard-background-color, white);
+  }
+  
+  // Target active dropdown option
+  .ant-select-item-option-active,
+  .ant-select-item-option-selected {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
   .parameter-container.sortable-container & {
     margin: 4px 0 0 4px;
     padding: 3px 6px 6px;
@@ -24,6 +51,20 @@
     margin: 4px 0 0 4px;
     padding: 3px 6px 6px;
     box-shadow: 0 4px 9px -3px rgba(102, 136, 153, 0.15);
+  }
+}
+
+// Make dropdowns use the background color
+// This selector overrides Ant Design's dropdown styles
+:global(.ant-select-dropdown) {
+  background-color: var(--dashboard-background-color, white) !important;
+}
+
+:global(.ant-select-item) {
+  background-color: var(--dashboard-background-color, white) !important;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
   }
 }
 

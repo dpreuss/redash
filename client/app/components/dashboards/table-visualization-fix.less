@@ -1,0 +1,63 @@
+/* 
+  This file adds background color support for table visualizations to match dashboard background
+*/
+
+.dashboard-wrapper {
+  .ant-table, 
+  .ant-table-container,
+  .ant-table-body,
+  .ant-table-content,
+  .ant-table-thead > tr,
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  .visualization-renderer,
+  .visualization-renderer-wrapper,
+  .table-visualization-container,
+  .counter-visualization-container,
+  .chart-visualization-container,
+  .visualization-container {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  /* Ensure table visualizations with white backgrounds get the dashboard background */
+  .ant-table-wrapper,
+  .ant-table-header,
+  .ant-empty-normal {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  /* Parameter dropdown menu backgrounds */
+  .ant-select-dropdown {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  /* Parameter dropdown items */
+  .ant-select-item,
+  .ant-select-item-option {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  /* Fix for dropdown menu placement */
+  .ant-select-dropdown-placement-bottomLeft,
+  .ant-select-dropdown-placement-bottomRight,
+  .ant-select-dropdown-placement-topLeft,
+  .ant-select-dropdown-placement-topRight {
+    background-color: var(--dashboard-background-color, #ffffff);
+  }
+  
+  /* Ensure dropdowns contrast properly if using a dark background */
+  .ant-select-dropdown-menu-item:hover:not(.ant-select-dropdown-menu-item-disabled) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Input field inside dashboard parameters */
+  .ant-select-selection-search-input,
+  .parameter-block .ant-select-selector,
+  .parameter-block .ant-input,
+  .parameter-input {
+    background-color: var(--dashboard-background-color, #ffffff) !important;
+  }
+} 

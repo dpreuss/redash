@@ -1,7 +1,8 @@
 import { isEmpty, map, isEqual } from "lodash";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
+import { useDebouncedCallback } from 'use-debounce';
 
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
@@ -25,13 +26,26 @@ import "./DashboardPage.less";
 
 function DashboardSettings({ dashboardConfiguration }) {
   const { dashboard, updateDashboard } = dashboardConfiguration;
-  const localBackgroundColor = dashboard.options?.backgroundColor || "#ffffff";
+  const [localBackgroundColor, setLocalBackgroundColor] = useState(dashboard.options?.backgroundColor || "#ffffff");
   
-  const handleBackgroundColorChange = (e) => {
-    updateDashboard({ options: { ...dashboard.options, backgroundColor: e.target.value } });
+  // Handle immediate UI updates without saving to backend
+  const handleLocalColorChange = (e) => {
+    setLocalBackgroundColor(e.target.value);
+    // Set CSS variable for immediate preview
+    document.documentElement.style.setProperty('--dashboard-background-color', e.target.value);
   };
   
-  const handleBackgroundColorChangeComplete = handleBackgroundColorChange;
+  // Debounced function to actually save to backend (only triggers after 500ms of no changes)
+  const debouncedUpdateColor = useDebouncedCallback((color) => {
+    updateDashboard({ options: { ...dashboard.options, backgroundColor: color } });
+  }, 500);
+  
+  // When color input changes, update local state and trigger debounced save
+  const handleBackgroundColorChange = (e) => {
+    const newColor = e.target.value;
+    handleLocalColorChange(e);
+    debouncedUpdateColor(newColor);
+  };
 
   return (
     <div className="m-b-10 p-15 tiled" style={{ backgroundColor: 'var(--dashboard-background-color, #ffffff)' }}>
@@ -52,13 +66,13 @@ function DashboardSettings({ dashboardConfiguration }) {
           </div>
         </div>
         <div className="form-group dashboard-settings-color m-b-0">
-          <label htmlFor="dashboard-background-color" className="m-r-10">Background Color</label>
+          <label htmlFor="dashboard-background-color" className="m-r-10 d-inline-block">Background Color</label>
           <input
             id="dashboard-background-color"
             type="color"
             value={localBackgroundColor}
             onChange={handleBackgroundColorChange}
-            onChangeComplete={handleBackgroundColorChangeComplete}
+            className="d-inline-block vertical-align-middle"
           />
         </div>
       </div>
@@ -166,7 +180,10 @@ function DashboardComponent(props) {
   // Only update dashboard if layout has changed
   const handleLayoutChange = useCallback((newLayout) => {
     if (!isEqual(newLayout, dashboard.layout)) {
-      updateDashboard({ layout: newLayout });
+      // The backend expects layout to be an array, not an object
+      // Normalize the data from an object to an array format
+      const layoutToSave = Array.isArray(newLayout) ? newLayout : [];
+      updateDashboard({ layout: layoutToSave });
     }
   }, [dashboard.layout, updateDashboard]);
 

@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+# This is a development entrypoint that avoids unnecessary rebuilds
+
+# Check if we have client/dist already - if not, we need to build
+if [ ! -d "/app/client/dist" ] || [ -z "$(ls -A /app/client/dist)" ]; then
+  echo "Frontend assets don't exist or are empty. You need to build them first with: docker compose build"
+  # Continue with normal startup, frontend will be built during the build phase
+else
+  echo "Frontend assets exist, skipping rebuild"
+  # No need to run yarn commands here - we'll rebuild during docker compose build
+fi
+
+# Continue with the regular entrypoint passing all arguments
+exec /app/bin/docker-entrypoint "$@" 

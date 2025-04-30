@@ -6,9 +6,18 @@ x-redash-service: &redash-service
     args:
       skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - ./:/app
+    - ./bin:/app/bin
+    - ./client/app:/app/client/app
+    - ./client/cypress:/app/client/cypress
+    - ./client/scripts:/app/client/scripts
+    - ./client/styles:/app/client/styles
+    - ./client/webpack.config.js:/app/client/webpack.config.js
+    - ./redash:/app/redash
+    - ./tests:/app/tests
+    - redash_node_modules:/app/node_modules
   env_file:
     - .env
+  entrypoint: /app/bin/docker-entrypoint
   ulimits:
     nofile:
       soft: 65536
@@ -82,4 +91,7 @@ volumes:
   pg_data:
     external: true
     name: pg_data
+  redash_node_modules:
+  # Commenting out client_dist volume to use direct file mapping
+  # redash_client_dist:
 

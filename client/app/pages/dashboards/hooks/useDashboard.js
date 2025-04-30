@@ -84,11 +84,29 @@ function useDashboard(dashboardData) {
           if (status === 403) {
             notification.error("Dashboard update failed", "Permission Denied.");
           } else if (status === 409) {
-            notification.error(
-              "It seems like the dashboard has been modified by another user. ",
-              "Please copy/backup your changes and reload this page.",
-              { duration: null }
-            );
+            // Get the latest version of the dashboard
+            Dashboard.get({ id: dashboard.id })
+              .then(refreshedDashboard => {
+                // Update the dashboard with the new version
+                setDashboard(currentDashboard => 
+                  extend({}, currentDashboard, { 
+                    version: refreshedDashboard.version,
+                    // Preserve local changes while getting new version
+                    ...data,
+                    // But ensure we have the latest server options
+                    options: refreshedDashboard.options 
+                  })
+                );
+                // Retry the update with the new version
+                updateDashboard(data);
+              })
+              .catch(() => {
+                notification.error(
+                  "Failed to refresh dashboard",
+                  "Please reload the page to get the latest version.",
+                  { duration: null }
+                );
+              });
           }
         });
     },

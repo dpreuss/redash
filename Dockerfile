@@ -4,6 +4,7 @@ RUN npm install --global --force yarn@1.22.22
 
 # Controls whether to build the frontend assets
 ARG skip_frontend_build
+ARG SKIP_REBUILD="false"
 
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
@@ -23,15 +24,27 @@ ENV BABEL_ENV=${code_coverage:+test}
 # Avoid issues caused by lags in disk and network I/O speeds when working on top of QEMU emulation for multi-platform image building.
 RUN yarn config set network-timeout 300000
 
+# Only install dependencies if needed for the build
 RUN if [ "x$skip_frontend_build" = "x" ] ; then yarn --frozen-lockfile --network-concurrency 1; fi
 
 COPY --chown=redash client /frontend/client
 COPY --chown=redash webpack.config.js /frontend/
+
+# Create the dist directory to mount volumes into
+RUN mkdir -p /frontend/client/dist
+
+# Only build if needed
 RUN <<EOF
   if [ "x$skip_frontend_build" = "x" ]; then
-    yarn build
+    # Check if we should skip the rebuild
+    if [ "$SKIP_REBUILD" = "true" ] && [ -d "/frontend/client/dist" ] && [ ! -z "$(ls -A /frontend/client/dist)" ]; then
+      echo "SKIP_REBUILD is set and dist exists, skipping rebuild"
+    else
+      # Regular build process
+      yarn clean && yarn build:viz && NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production yarn webpack
+    fi
   else
-    mkdir -p /frontend/client/dist
+    # Just create placeholder files
     touch /frontend/client/dist/multi_org.html
     touch /frontend/client/dist/index.html
   fi
