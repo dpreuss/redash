@@ -34,11 +34,11 @@ function DashboardSettings({ dashboardConfiguration }) {
   const handleBackgroundColorChangeComplete = handleBackgroundColorChange;
 
   return (
-    <div className="m-b-10 p-15 bg-white tiled">
+    <div className="m-b-10 p-15 tiled" style={{ backgroundColor: 'var(--dashboard-background-color, #ffffff)' }}>
       <div className="d-flex justify-content-between align-items-center">
-        <h4 className="m-t-0 m-b-0">Dashboard Settings</h4>
         <div className="d-flex align-items-center">
-          <div className="form-group dashboard-settings-filters m-b-0 m-r-20">
+          <h4 className="m-t-0 m-b-0 m-r-15">Dashboard Settings</h4>
+          <div className="form-group dashboard-settings-filters m-b-0">
             <label htmlFor="dashboard-filters-enabled" className="d-flex align-items-center m-0">
               <input
                 type="checkbox"
@@ -50,16 +50,16 @@ function DashboardSettings({ dashboardConfiguration }) {
               <span>Use Dashboard Level Filters</span>
             </label>
           </div>
-          <div className="form-group dashboard-settings-color m-b-0">
-            <label htmlFor="dashboard-background-color" className="m-r-10">Background Color</label>
-            <input
-              id="dashboard-background-color"
-              type="color"
-              value={localBackgroundColor}
-              onChange={handleBackgroundColorChange}
-              onChangeComplete={handleBackgroundColorChangeComplete}
-            />
-          </div>
+        </div>
+        <div className="form-group dashboard-settings-color m-b-0">
+          <label htmlFor="dashboard-background-color" className="m-r-10">Background Color</label>
+          <input
+            id="dashboard-background-color"
+            type="color"
+            value={localBackgroundColor}
+            onChange={handleBackgroundColorChange}
+            onChangeComplete={handleBackgroundColorChangeComplete}
+          />
         </div>
       </div>
     </div>
@@ -183,7 +183,8 @@ function DashboardComponent(props) {
         }
       />
       {!isEmpty(globalParameters) && (
-        <div className="dashboard-parameters m-b-10 p-15 bg-white tiled" data-test="DashboardParameters">
+        <div className="dashboard-parameters m-b-10 p-15 tiled" data-test="DashboardParameters" 
+             style={{ backgroundColor: 'var(--dashboard-background-color, #ffffff)' }}>
           <Parameters
             parameters={globalParameters}
             onValuesChange={refreshDashboard}
@@ -193,7 +194,8 @@ function DashboardComponent(props) {
         </div>
       )}
       {!isEmpty(filters) && (
-        <div className="m-b-10 p-15 bg-white tiled" data-test="DashboardFilters">
+        <div className="m-b-10 p-15 tiled" data-test="DashboardFilters"
+             style={{ backgroundColor: 'var(--dashboard-background-color, #ffffff)' }}>
           <Filters filters={filters} onChange={setFilters} />
         </div>
       )}

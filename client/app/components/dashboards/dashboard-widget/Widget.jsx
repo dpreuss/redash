@@ -113,7 +113,7 @@ class Widget extends React.Component {
     const showDropdownButton = !isPublic && (canEdit || !isEmpty(menuOptions));
     return (
       <div className="widget-wrapper">
-        <div className={cx("tile body-container", className)} {...tileProps}>
+        <div className={cx("tile body-container", className)} style={{ backgroundColor: 'var(--dashboard-background-color, #ffffff)' }} {...tileProps}>
           <div className="widget-actions">
             {showDropdownButton && (
               <WidgetDropdownButton
