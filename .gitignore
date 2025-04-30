@@ -18,13 +18,13 @@ _build
 .vscode
 .env
 .tool-versions
-
+redash.sql
+cleanup_layouts.py
 dump.rdb
-
 node_modules
 .tmp
 .sass-cache
 npm-debug.log
-
 client/cypress/screenshots
 client/cypress/videos
+create_feature_branches.sh
