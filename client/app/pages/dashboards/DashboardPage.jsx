@@ -101,7 +101,7 @@ function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
   const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, refreshDashboard } = dashboardConfiguration;
   const [filters, setFilters] = useState([]);
-  const [editingLayout] = useState(props.editMode);
+  const { editingLayout } = dashboardConfiguration;
   const [isPublic] = useState(false); // Default to false since this is the private dashboard view
   const [pageContainer, setPageContainer] = useState(null);
   const [bottomPanelStyles, setBottomPanelStyles] = useState({});
