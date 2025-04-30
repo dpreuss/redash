@@ -35,22 +35,23 @@ function DashboardSettings({ dashboardConfiguration }) {
 
   return (
     <div className="m-b-10 p-15 bg-white tiled">
-      <h4 className="m-t-0">Dashboard Settings</h4>
-      <div className="m-t-10 m-b-10">
-        <div className="dashboard-settings-row">
-          <div className="form-group dashboard-settings-filters">
-            <label htmlFor="dashboard-filters-enabled">
+      <div className="d-flex justify-content-between align-items-center">
+        <h4 className="m-t-0 m-b-0">Dashboard Settings</h4>
+        <div className="d-flex align-items-center">
+          <div className="form-group dashboard-settings-filters m-b-0 m-r-20">
+            <label htmlFor="dashboard-filters-enabled" className="d-flex align-items-center m-0">
               <input
                 type="checkbox"
                 id="dashboard-filters-enabled"
+                className="m-r-5"
                 checked={!!dashboard.dashboard_filters_enabled}
                 onChange={e => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
               />
               <span>Use Dashboard Level Filters</span>
             </label>
           </div>
-          <div className="form-group dashboard-settings-color">
-            <label htmlFor="dashboard-background-color">Background Color</label>
+          <div className="form-group dashboard-settings-color m-b-0">
+            <label htmlFor="dashboard-background-color" className="m-r-10">Background Color</label>
             <input
               id="dashboard-background-color"
               type="color"
