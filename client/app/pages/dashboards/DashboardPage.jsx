@@ -1,10 +1,9 @@
-import { isEmpty, map, debounce, isEqual } from "lodash";
+import { isEmpty, map, isEqual } from "lodash";
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Button from "antd/lib/button";
-import Checkbox from "antd/lib/checkbox";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DynamicComponent from "@/components/DynamicComponent";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -100,10 +99,9 @@ AddWidgetContainer.propTypes = {
 
 function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
-  const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard, refreshDashboard } = dashboardConfiguration;
+  const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, refreshDashboard } = dashboardConfiguration;
   const [filters, setFilters] = useState([]);
-  const [editingLayout, setEditingLayout] = useState(props.editMode);
-  const [gridDisabled, setGridDisabled] = useState(false);
+  const [editingLayout] = useState(props.editMode);
   const [isPublic] = useState(false); // Default to false since this is the private dashboard view
   const [pageContainer, setPageContainer] = useState(null);
   const [bottomPanelStyles, setBottomPanelStyles] = useState({});
@@ -208,7 +206,7 @@ function DashboardComponent(props) {
           onLoadWidget={loadWidget}
           onRefreshWidget={refreshWidget}
           onRemoveWidget={removeWidget}
-          onBreakpointChange={setGridDisabled}
+          onBreakpointChange={() => {}}
           onLayoutChange={handleLayoutChange}
           onWidgetSizeChange={onWidgetSizeChange}
           onParameterMappingsChange={onParameterMappingsChange}
