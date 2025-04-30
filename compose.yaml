@@ -6,7 +6,7 @@ x-redash-service: &redash-service
     args:
       skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - redash_app:/app
+    - ./:/app
   env_file:
     - .env
   ulimits:
@@ -38,8 +38,6 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
-    volumes:
-      - ./:/app
   scheduler:
     <<: *redash-service
     command: dev_scheduler
@@ -47,8 +45,6 @@ services:
       - server
     environment:
       <<: *redash-environment
-    volumes:
-      - ./:/app
   worker:
     <<: *redash-service
     command: dev_worker
@@ -57,8 +53,6 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
-    volumes:
-      - ./:/app
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -85,9 +79,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  redash_app:
-    external: true
-    name: redash_redash_app
   pg_data:
     external: true
     name: pg_data
