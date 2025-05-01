@@ -1,5 +1,6 @@
 .venv
 venv/
+venv310/
 .cache
 .coverage.*
 .coveralls.yml
@@ -20,11 +21,15 @@ _build
 .tool-versions
 redash.sql
 cleanup_layouts.py
+run_web_interface.py
+
 dump.rdb
+
 node_modules
 .tmp
 .sass-cache
 npm-debug.log
+
 client/cypress/screenshots
 client/cypress/videos
-create_feature_branches.sh
+venv310/
