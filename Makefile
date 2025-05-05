@@ -1,43 +1,14 @@
-.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash init_db clean_db update_version
+.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash update_version
 
-update_version:
-	@echo "Updating version with current timestamp..."
-	@current_time=$$(date "+%Y%m%d%H%M") && \
-	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
-	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
-	rm -f pyproject.toml.bak redash/__init__.py.bak
-
-compose_build: update_version .env
+compose_build: .env
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose build
 
-up: update_version
+up:
 	docker compose up -d redis postgres --remove-orphans
-#	docker compose exec -u postgres postgres psql postgres --csv \
-#		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
-#		| grep -q "organizations" || make init_db
+	docker compose exec -u postgres postgres psql postgres --csv \
+		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
+		| grep -q "organizations" || make create_database
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose up -d --build --remove-orphans
-
-clean_db:
-	@echo "Cleaning database..."
-	docker compose down
-	docker compose rm -f -v postgres
-	rm -rf /Users/Don/data/pg_data
-	mkdir -p /Users/Don/data/pg_data
-	@echo "Database cleaned."
-
-init_db:
-	@echo "Checking if database needs initialization..."
-	@mkdir -p pg_data
-	@if [ ! -f pg_data/pgdata/PG_VERSION ]; then \
-		echo "Initializing database with redash.sql..."; \
-		docker compose up -d postgres; \
-		echo "Waiting for PostgreSQL to start..."; \
-		until docker compose exec postgres pg_isready; do sleep 1; done; \
-		docker compose exec -T postgres psql -U postgres postgres < redash.sql; \
-		echo "Database initialized successfully."; \
-	else \
-		echo "Database already exists, skipping initialization."; \
-	fi
 
 test_db:
 	@for i in `seq 1 5`; do \
@@ -87,26 +58,29 @@ lint:
 backend-unit-tests: up test_db
 	docker compose run --rm --name tests server tests
 
-# Add yarn configuration
-YARN_CONFIG=yarn --use-yarnrc $(PWD)/.yarnrc
-
 frontend-unit-tests:
-	CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 $(YARN_CONFIG) --frozen-lockfile
-	$(YARN_CONFIG) test
+	CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn --frozen-lockfile
+	yarn test
 
 test: backend-unit-tests frontend-unit-tests lint
 
 build:
-	$(YARN_CONFIG) build
+	yarn build
 
 watch:
-	$(YARN_CONFIG) watch
+	yarn watch
 
 start:
-	$(YARN_CONFIG) start
+	yarn start
 
 redis-cli:
 	docker compose run --rm redis redis-cli -h redis
 
 bash:
 	docker compose run --rm server bash
+
+update_version:
+	@VERSION=$$(python ./manage.py version); \
+	FULL_VERSION="$$VERSION+`date +%Y%m%d%H%M%S`"; \
+	sed -i '' "s/^__version__ = \".*\"/__version__ = \"$$FULL_VERSION\"/" redash/__init__.py; \
+	echo "\"$$FULL_VERSION\"" > client/app/version.json
