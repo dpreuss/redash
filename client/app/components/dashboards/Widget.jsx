@@ -39,14 +39,7 @@ function Widget({
     );
   }
   if (type === WidgetTypeEnum.TEXTBOX) {
-    return (
-      <TextboxWidget
-        widget={widget}
-        canEdit={dashboard.canEdit()}
-        isPublic={isPublic}
-        onDelete={onDelete}
-      />
-    );
+    return <TextboxWidget widget={widget} canEdit={dashboard.canEdit()} isPublic={isPublic} onDelete={onDelete} />;
   }
   return <RestrictedWidget widget={widget} />;
 }
@@ -75,4 +68,4 @@ Widget.defaultProps = {
   backgroundColor: null,
 };
 
-export default Widget; 
+export default Widget;

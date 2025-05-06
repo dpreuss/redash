@@ -184,11 +184,11 @@ class Widget {
 
   save(key, value) {
     let data = pick(this, "options", "text", "id", "width", "dashboard_id", "visualization_id", "version");
-    
+
     if (key) {
       if (value) {
         // If we're updating options, merge with existing options
-        if (key === 'options' && typeof value === 'object') {
+        if (key === "options" && typeof value === "object") {
           data.options = { ...this.options, ...value };
         } else {
           data[key] = value;

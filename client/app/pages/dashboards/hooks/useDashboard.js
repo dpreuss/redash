@@ -90,7 +90,7 @@ export function useDashboard(dashboardData) {
             notification.error("Dashboard update failed", "Permission Denied.");
           } else if (status === 409) {
             notification.error(
-              "Dashboard Version Conflict", 
+              "Dashboard Version Conflict",
               "The dashboard has been modified by another user. Please reload the page to get the latest version.",
               { duration: null }
             );
@@ -109,15 +109,13 @@ export function useDashboard(dashboardData) {
     // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
     // console.trace('[loadWidget] call stack');
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    return widget
-      .load(forceRefresh)
-      .catch(error => {
-        // QueryResultErrors are expected
-        if (error instanceof QueryResultError) {
-          return;
-        }
-        return Promise.reject(error);
-      });
+    return widget.load(forceRefresh).catch(error => {
+      // QueryResultErrors are expected
+      if (error instanceof QueryResultError) {
+        return;
+      }
+      return Promise.reject(error);
+    });
   }, []);
 
   const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);

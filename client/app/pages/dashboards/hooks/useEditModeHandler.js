@@ -76,11 +76,9 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
         .catch(error => {
           setDashboardStatus(DashboardStatusEnum.SAVING_FAILED);
           if (error.response && error.response.status === 409) {
-            notification.error(
-              "Version Conflict",
-              "The dashboard layout has been modified. Please try saving again.",
-              { duration: null }
-            );
+            notification.error("Version Conflict", "The dashboard layout has been modified. Please try saving again.", {
+              duration: null,
+            });
           } else {
             notification.error(
               "Error Saving Layout",

@@ -122,12 +122,12 @@ export default function prepareLayout(element: any, options: any, data: any) {
     hoverlabel: {
       namelength: -1,
     },
-    paper_bgcolor: options.backgroundColor || '#ffffff',
-    plot_bgcolor: options.backgroundColor || '#ffffff',
+    paper_bgcolor: options.backgroundColor || "#ffffff",
+    plot_bgcolor: options.backgroundColor || "#ffffff",
   };
 
   if (["line", "area", "column"].includes(options.globalSeriesType)) {
-    layout.hovermode = options.swappedAxes ? 'y' : 'x';
+    layout.hovermode = options.swappedAxes ? "y" : "x";
   }
 
   switch (options.globalSeriesType) {

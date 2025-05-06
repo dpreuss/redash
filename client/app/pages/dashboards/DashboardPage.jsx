@@ -19,12 +19,10 @@ import { useDashboard } from "./hooks/useDashboard";
 import "./DashboardPage.less";
 
 function DashboardSettings({ dashboard, updateDashboard }) {
-  const [localBackgroundColor, setLocalBackgroundColor] = useState(
-    dashboard.options?.backgroundColor || '#ffffff'
-  );
+  const [localBackgroundColor, setLocalBackgroundColor] = useState(dashboard.options?.backgroundColor || "#ffffff");
 
   const debouncedUpdate = useCallback(
-    debounce((color) => {
+    debounce(color => {
       const newOptions = {
         ...dashboard.options,
         backgroundColor: color,
@@ -135,7 +133,14 @@ export function normalizeLayout(layout) {
 
 function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
-  const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard } = dashboardConfiguration;
+  const {
+    dashboard,
+    updateDashboard,
+    loadWidget,
+    refreshWidget,
+    removeWidget,
+    canEditDashboard,
+  } = dashboardConfiguration;
   const [filters, setFilters] = useState([]);
   const [editingLayout, setEditingLayout] = useState(props.editMode);
   const [gridDisabled, setGridDisabled] = useState(false);
@@ -181,38 +186,43 @@ function DashboardComponent(props) {
 
   // Only update dashboard if layout has changed, and debounce the save
   const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
-  const handleLayoutChange = useCallback((newLayout) => {
-    // Convert object to array if needed
-    let layoutArray = newLayout;
-    if (!Array.isArray(newLayout) && typeof newLayout === "object" && newLayout !== null) {
-      layoutArray = Object.entries(newLayout).map(([i, pos]) => ({
-        i,
-        x: pos.col,
-        y: pos.row,
-        w: pos.sizeX,
-        h: pos.sizeY
-      }));
-    }
-    // console.log('[handleLayoutChange] layoutArray:', layoutArray);
-    const normNew = normalizeLayout(layoutArray);
-    const normCurrent = normalizeLayout(dashboard.layout);
+  const handleLayoutChange = useCallback(
+    newLayout => {
+      // Convert object to array if needed
+      let layoutArray = newLayout;
+      if (!Array.isArray(newLayout) && typeof newLayout === "object" && newLayout !== null) {
+        layoutArray = Object.entries(newLayout).map(([i, pos]) => ({
+          i,
+          x: pos.col,
+          y: pos.row,
+          w: pos.sizeX,
+          h: pos.sizeY,
+        }));
+      }
+      // console.log('[handleLayoutChange] layoutArray:', layoutArray);
+      const normNew = normalizeLayout(layoutArray);
+      const normCurrent = normalizeLayout(dashboard.layout);
 
-    // Check if any positions have actually changed
-    const hasPositionChanges = normNew.some(newItem => {
-      const currentItem = normCurrent.find(c => c.i === newItem.i);
-      if (!currentItem) return true;
-      return newItem.x !== currentItem.x || 
-             newItem.y !== currentItem.y || 
-             newItem.w !== currentItem.w || 
-             newItem.h !== currentItem.h;
-    });
+      // Check if any positions have actually changed
+      const hasPositionChanges = normNew.some(newItem => {
+        const currentItem = normCurrent.find(c => c.i === newItem.i);
+        if (!currentItem) return true;
+        return (
+          newItem.x !== currentItem.x ||
+          newItem.y !== currentItem.y ||
+          newItem.w !== currentItem.w ||
+          newItem.h !== currentItem.h
+        );
+      });
 
-    if (hasPositionChanges) {
-      // console.log('[handleLayoutChange] Saving dashboard layout changes');
-      Object.freeze(normNew);
-      debouncedUpdateDashboard({ layout: normNew });
-    }
-  }, [dashboard.layout, debouncedUpdateDashboard]);
+      if (hasPositionChanges) {
+        // console.log('[handleLayoutChange] Saving dashboard layout changes');
+        Object.freeze(normNew);
+        debouncedUpdateDashboard({ layout: normNew });
+      }
+    },
+    [dashboard.layout, debouncedUpdateDashboard]
+  );
 
   return (
     <>
@@ -237,7 +247,7 @@ function DashboardComponent(props) {
           isDuplicating: false,
           duplicateDashboard: () => {},
           archiveDashboard: () => updateDashboard({ is_archived: true }),
-          managePermissions: () => {}
+          managePermissions: () => {},
         }}
         headerExtra={null}
       />

@@ -155,9 +155,12 @@ class DashboardGrid extends React.Component {
     }, 50);
 
     // Set background color CSS variable
-    const wrapper = document.querySelector('.dashboard-wrapper');
+    const wrapper = document.querySelector(".dashboard-wrapper");
     if (wrapper) {
-      wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
+      wrapper.style.setProperty(
+        "--dashboard-background-color",
+        this.props.dashboard.options?.backgroundColor || "#ffffff"
+      );
     }
   }
 
@@ -167,9 +170,12 @@ class DashboardGrid extends React.Component {
 
     // Update background color if changed
     if (prevProps.dashboard.options?.backgroundColor !== this.props.dashboard.options?.backgroundColor) {
-      const wrapper = document.querySelector('.dashboard-wrapper');
+      const wrapper = document.querySelector(".dashboard-wrapper");
       if (wrapper) {
-        wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
+        wrapper.style.setProperty(
+          "--dashboard-background-color",
+          this.props.dashboard.options?.backgroundColor || "#ffffff"
+        );
       }
     }
   }
@@ -211,7 +217,7 @@ class DashboardGrid extends React.Component {
       .value();
 
     // Ensure we're passing an object, not an array
-    if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+    if (normalized && typeof normalized === "object" && !Array.isArray(normalized)) {
       // Create an immutable copy before passing to parent
       const immutableLayout = Object.freeze({ ...normalized });
       this.props.onLayoutChange(immutableLayout);
