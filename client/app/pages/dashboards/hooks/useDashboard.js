@@ -78,13 +78,13 @@ export function useDashboard(dashboardData) {
         data = { ...data, version: dashboard.version };
       }
       return Dashboard.save(data)
-        .then(updatedDashboard => {
-          setDashboard(currentDashboard => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
+        .then((updatedDashboard) => {
+          setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
           if (has(data, "name")) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
         })
-        .catch(error => {
+        .catch((error) => {
           const status = get(error, "response.status");
           if (status === 403) {
             notification.error("Dashboard update failed", "Permission Denied.");
@@ -109,7 +109,7 @@ export function useDashboard(dashboardData) {
     // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
     // console.trace('[loadWidget] call stack');
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    return widget.load(forceRefresh).catch(error => {
+    return widget.load(forceRefresh).catch((error) => {
       // QueryResultErrors are expected
       if (error instanceof QueryResultError) {
         return;
@@ -135,7 +135,7 @@ export function useDashboard(dashboardData) {
     (forceRefresh = false, updatedParameters = []) => {
       const affectedWidgets = getAffectedWidgets(dashboard.widgets, updatedParameters);
       const loadWidgetPromises = compact(
-        affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch(error => error))
+        affectedWidgets.map((widget) => loadWidget(widget, forceRefresh).catch((error) => error))
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
@@ -159,8 +159,8 @@ export function useDashboard(dashboardData) {
 
   const archiveDashboard = useCallback(() => {
     recordEvent("archive", "dashboard", dashboard.id);
-    Dashboard.delete(dashboard).then(updatedDashboard =>
-      setDashboard(currentDashboard => extend({}, currentDashboard, pick(updatedDashboard, ["is_archived"])))
+    Dashboard.delete(dashboard).then((updatedDashboard) =>
+      setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, ["is_archived"])))
     );
   }, [dashboard]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -178,8 +178,8 @@ export function useDashboard(dashboardData) {
   const showAddTextboxDialog = useCallback(() => {
     TextboxDialog.showModal({
       isNew: true,
-    }).onClose(text =>
-      dashboard.addWidget(text).then(() => setDashboard(currentDashboard => extend({}, currentDashboard)))
+    }).onClose((text) =>
+      dashboard.addWidget(text).then(() => setDashboard((currentDashboard) => extend({}, currentDashboard)))
     );
   }, [dashboard]);
 
@@ -191,13 +191,13 @@ export function useDashboard(dashboardData) {
         .addWidget(visualization, {
           parameterMappings: editableMappingsToParameterMappings(parameterMappings),
         })
-        .then(widget => {
+        .then((widget) => {
           const widgetsToSave = [
             widget,
             ...synchronizeWidgetTitles(widget.options.parameterMappings, dashboard.widgets),
           ];
-          return Promise.all(widgetsToSave.map(w => w.save())).then(() =>
-            setDashboard(currentDashboard => extend({}, currentDashboard))
+          return Promise.all(widgetsToSave.map((w) => w.save())).then(() =>
+            setDashboard((currentDashboard) => extend({}, currentDashboard))
           );
         })
     );

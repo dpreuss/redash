@@ -57,10 +57,10 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
 
         const saveWidget = () => widget.save("options", { position });
 
-        return saveWidget().catch(error => {
+        return saveWidget().catch((error) => {
           if (error.response && error.response.status === 409) {
             // If we get a version conflict, refresh the widget data and try again
-            return axios.get(`api/widgets/${widget.id}`).then(response => {
+            return axios.get(`api/widgets/${widget.id}`).then((response) => {
               // Update the widget with fresh data
               Object.assign(widget, response.data);
               // Try saving again with new version
@@ -73,7 +73,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
 
       return Promise.all(saveChangedWidgets)
         .then(() => setDashboardStatus(DashboardStatusEnum.SAVED))
-        .catch(error => {
+        .catch((error) => {
           setDashboardStatus(DashboardStatusEnum.SAVING_FAILED);
           if (error.response && error.response.status === 409) {
             notification.error("Version Conflict", "The dashboard layout has been modified. Please try saving again.", {
