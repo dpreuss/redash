@@ -6,7 +6,7 @@ x-redash-service: &redash-service
     args:
       skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - ./:/app
+    - redash_app:/app
   env_file:
     - .env
   ulimits:
