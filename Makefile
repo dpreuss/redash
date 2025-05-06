@@ -1,16 +1,9 @@
-.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash init_db clean_db update_version
+.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash update_version
 
-update_version:
-	@echo "Updating version with current timestamp..."
-	@current_time=$$(date "+%Y%m%d%H%M") && \
-	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
-	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
-	rm -f pyproject.toml.bak redash/__init__.py.bak
-
-compose_build: update_version .env
+compose_build: .env
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose build
 
-up: update_version
+up:
 	docker compose up -d redis postgres --remove-orphans
 	docker compose exec -u postgres postgres psql postgres --csv \
 		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
@@ -85,3 +78,9 @@ redis-cli:
 
 bash:
 	docker compose run --rm server bash
+
+update_version:
+	@VERSION=$$(python ./manage.py version); \
+	FULL_VERSION="$$VERSION+`date +%Y%m%d%H%M%S`"; \
+	sed -i '' "s/^__version__ = \".*\"/__version__ = \"$$FULL_VERSION\"/" redash/__init__.py; \
+	echo "\"$$FULL_VERSION\"" > client/app/version.json
