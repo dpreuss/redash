@@ -15,7 +15,7 @@ import routes from "@/services/routes";
 
 import logoUrl from "@/assets/images/redash_icon_small.png";
 
-import useDashboard from "./hooks/useDashboard";
+import { useDashboard } from "./hooks/useDashboard";
 
 import "./PublicDashboardPage.less";
 

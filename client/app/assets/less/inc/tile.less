@@ -1,5 +1,5 @@
 .tile {
-    background-color: #fff;
+    background-color: var(--dashboard-background-color, #ffffff);
     margin-bottom: @grid-gutter-width;
     position: relative;
     border-radius: 3px;
@@ -16,6 +16,7 @@
 .tiled {
     border-radius: 3px;
     box-shadow: fade(@redash-gray, 15%) 0px 4px 9px -3px;
+    background-color: var(--dashboard-background-color, #ffffff);
 }
 
 .t-header {
@@ -25,6 +26,7 @@
 
     &:not(.th-alt) {
         padding: 20px 23px;
+        background-color: var(--dashboard-background-color, #ffffff);
         
         .th-title {
             font-size: 17px;
