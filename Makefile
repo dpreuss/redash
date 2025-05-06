@@ -1,4 +1,4 @@
-.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash
+.PHONY: compose_build up test_db create_database clean clean-all down tests lint backend-unit-tests frontend-unit-tests test build watch start redis-cli bash update_version
 
 compose_build: .env
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose build
@@ -34,7 +34,7 @@ clean:
 
 clean-all: clean
 	docker image rm --force \
-		redash/redash:10.1.0.b50633 redis:7-alpine maildev/maildev:latest \
+		redash/redash:latest redis:7-alpine maildev/maildev:latest \
 		pgautoupgrade/pgautoupgrade:15-alpine3.8 pgautoupgrade/pgautoupgrade:latest
 
 down:
@@ -78,3 +78,10 @@ redis-cli:
 
 bash:
 	docker compose run --rm server bash
+
+update_version:
+	@echo "Updating version with current timestamp..."
+	@current_time=$$(date "+%Y%m%d%H%M") && \
+	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
+	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
+	rm -f pyproject.toml.bak redash/__init__.py.bak

@@ -4,6 +4,7 @@ viz-lib/node_modules/
 .tmp/
 .venv/
 venv/
+venv310/
 .git/
 /.codeclimate.yml
 /.coverage

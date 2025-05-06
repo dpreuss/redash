@@ -6,18 +6,9 @@ x-redash-service: &redash-service
     args:
       skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - ./bin:/app/bin
-    - ./client/app:/app/client/app
-    - ./client/cypress:/app/client/cypress
-    - ./client/scripts:/app/client/scripts
-    - ./client/styles:/app/client/styles
-    - ./client/webpack.config.js:/app/client/webpack.config.js
-    - ./redash:/app/redash
-    - ./tests:/app/tests
-    - redash_node_modules:/app/node_modules
+    - redash_app:/app
   env_file:
     - .env
-  entrypoint: /app/bin/docker-entrypoint
   ulimits:
     nofile:
       soft: 65536
@@ -47,6 +38,8 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   scheduler:
     <<: *redash-service
     command: dev_scheduler
@@ -54,6 +47,8 @@ services:
       - server
     environment:
       <<: *redash-environment
+    volumes:
+      - ./:/app
   worker:
     <<: *redash-service
     command: dev_worker
@@ -62,6 +57,8 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -78,7 +75,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: "trust"
       PGDATA: /var/lib/postgresql/data/pgdata/pg_data
     volumes:
-      # - ./redash.sql:/docker-entrypoint-initdb.d/redash.sql
+      - ./redash.sql:/docker-entrypoint-initdb.d/redash.sql
       - pg_data:/var/lib/postgresql/data/pgdata
   email:
     image: maildev/maildev
@@ -88,10 +85,10 @@ services:
     restart: unless-stopped
 
 volumes:
+  redash_app:
+    external: true
+    name: redash_redash_app
   pg_data:
     external: true
     name: pg_data
-  redash_node_modules:
-  # Commenting out client_dist volume to use direct file mapping
-  # redash_client_dist:
 
