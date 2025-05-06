@@ -27,9 +27,9 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
   const canEditParameters = canEditDashboard && !isEmpty(invoke(widget, "query.getParametersDefs"));
   const widgetQueryResult = widget.getQueryResult();
   const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
-  const parts = window.location.pathname.split('/').reverse()
+  const parts = window.location.pathname.split("/").reverse();
   var apiKey = null;
-  if (parts.length > 3 && parts[2] === 'public' && parts[0].length === 40) {
+  if (parts.length > 3 && parts[2] === "public" && parts[0].length === 40) {
     apiKey = parts[0];
   }
   const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType, apiKey);
