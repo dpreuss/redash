@@ -2,6 +2,7 @@ import { debounce, find, has, isMatch, map, pickBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import location from "@/services/location";
 import notification from "@/services/notification";
+import { axios } from "@/services/axios";
 
 export const DashboardStatusEnum = {
   SAVED: "saved",
@@ -54,14 +55,37 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
           return Promise.resolve();
         }
 
-        return widget.save("options", { position });
+        const saveWidget = () => widget.save("options", { position });
+
+        return saveWidget().catch((error) => {
+          if (error.response && error.response.status === 409) {
+            // If we get a version conflict, refresh the widget data and try again
+            return axios.get(`api/widgets/${widget.id}`).then(response => {
+              // Update the widget with fresh data
+              Object.assign(widget, response.data);
+              // Try saving again with new version
+              return saveWidget();
+            });
+          }
+          throw error;
+        });
       });
 
       return Promise.all(saveChangedWidgets)
         .then(() => setDashboardStatus(DashboardStatusEnum.SAVED))
-        .catch(() => {
+        .catch((error) => {
           setDashboardStatus(DashboardStatusEnum.SAVING_FAILED);
-          notification.error("Error saving changes.");
+          if (error.response && error.response.status === 409) {
+            notification.error("Version Conflict", "The dashboard layout has been modified. Please try saving again.", {
+              duration: null,
+            });
+          } else {
+            notification.error(
+              "Error Saving Layout",
+              "There was a problem saving the dashboard layout. Please try again.",
+              { duration: null }
+            );
+          }
         });
     },
     [canEditDashboard, widgets]

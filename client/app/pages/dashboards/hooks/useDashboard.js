@@ -14,11 +14,12 @@ import { editableMappingsToParameterMappings, synchronizeWidgetTitles } from "@/
 import ShareDashboardDialog from "../components/ShareDashboardDialog";
 import useFullscreenHandler from "../../../lib/hooks/useFullscreenHandler";
 import useRefreshRateHandler from "./useRefreshRateHandler";
-import useEditModeHandler from "./useEditModeHandler";
+import useEditModeHandler, { DashboardStatusEnum } from "./useEditModeHandler";
 import useDuplicateDashboard from "./useDuplicateDashboard";
 import { policy } from "@/services/policy";
+import { normalizeLayout } from "../DashboardPage";
 
-export { DashboardStatusEnum } from "./useEditModeHandler";
+export { DashboardStatusEnum };
 
 function getAffectedWidgets(widgets, updatedParameters = []) {
   return !isEmpty(updatedParameters)
@@ -35,7 +36,7 @@ function getAffectedWidgets(widgets, updatedParameters = []) {
     : widgets;
 }
 
-function useDashboard(dashboardData) {
+export function useDashboard(dashboardData) {
   const [dashboard, setDashboard] = useState(dashboardData);
   const [filters, setFilters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,6 +68,10 @@ function useDashboard(dashboardData) {
 
   const updateDashboard = useCallback(
     (data, includeVersion = true) => {
+      // Normalize layout if present
+      if (data.layout) {
+        data.layout = normalizeLayout(data.layout);
+      }
       setDashboard(currentDashboard => extend({}, currentDashboard, data));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
@@ -79,14 +84,14 @@ function useDashboard(dashboardData) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
         })
-        .catch(error => {
+        .catch((error) => {
           const status = get(error, "response.status");
           if (status === 403) {
             notification.error("Dashboard update failed", "Permission Denied.");
           } else if (status === 409) {
             notification.error(
-              "It seems like the dashboard has been modified by another user. ",
-              "Please copy/backup your changes and reload this page.",
+              "Dashboard Version Conflict",
+              "The dashboard has been modified by another user. Please reload the page to get the latest version.",
               { duration: null }
             );
           }
@@ -101,18 +106,16 @@ function useDashboard(dashboardData) {
   }, [dashboard, updateDashboard]);
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
+    // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
+    // console.trace('[loadWidget] call stack');
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    setDashboard(currentDashboard => extend({}, currentDashboard));
-    return widget
-      .load(forceRefresh)
-      .catch(error => {
-        // QueryResultErrors are expected
-        if (error instanceof QueryResultError) {
-          return;
-        }
-        return Promise.reject(error);
-      })
-      .finally(() => setDashboard(currentDashboard => extend({}, currentDashboard)));
+    return widget.load(forceRefresh).catch((error) => {
+      // QueryResultErrors are expected
+      if (error instanceof QueryResultError) {
+        return;
+      }
+      return Promise.reject(error);
+    });
   }, []);
 
   const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
@@ -130,18 +133,18 @@ function useDashboard(dashboardData) {
 
   const loadDashboard = useCallback(
     (forceRefresh = false, updatedParameters = []) => {
-      const affectedWidgets = getAffectedWidgets(dashboardRef.current.widgets, updatedParameters);
+      const affectedWidgets = getAffectedWidgets(dashboard.widgets, updatedParameters);
       const loadWidgetPromises = compact(
-        affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch(error => error))
+        affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch((error) => error))
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
-        const queryResults = compact(map(dashboardRef.current.widgets, widget => widget.getQueryResult()));
-        const updatedFilters = collectDashboardFilters(dashboardRef.current, queryResults, location.search);
+        const queryResults = compact(map(dashboard.widgets, widget => widget.getQueryResult()));
+        const updatedFilters = collectDashboardFilters(dashboard, queryResults, location.search);
         setFilters(updatedFilters);
       });
     },
-    [loadWidget]
+    [dashboard, loadWidget]
   );
 
   const refreshDashboard = useCallback(
@@ -207,6 +210,17 @@ function useDashboard(dashboardData) {
   useEffect(() => {
     setDashboard(dashboardData);
     loadDashboard();
+    // Initialize layout if empty
+    if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
+      const initialLayout = dashboardData.widgets.map(widget => ({
+        i: widget.id.toString(),
+        x: widget.options.position.col,
+        y: widget.options.position.row,
+        w: widget.options.position.sizeX,
+        h: widget.options.position.sizeY,
+      }));
+      setDashboard(currentDashboard => ({ ...currentDashboard, layout: initialLayout }));
+    }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -250,5 +264,3 @@ function useDashboard(dashboardData) {
     duplicateDashboard,
   };
 }
-
-export default useDashboard;
