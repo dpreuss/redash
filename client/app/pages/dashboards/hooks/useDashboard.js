@@ -84,7 +84,7 @@ export function useDashboard(dashboardData) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
         })
-        .catch(error => {
+        .catch((error) => {
           const status = get(error, "response.status");
           if (status === 403) {
             notification.error("Dashboard update failed", "Permission Denied.");
