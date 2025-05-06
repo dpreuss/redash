@@ -350,7 +350,7 @@ class QueryResult {
         queryResult.isLoadingResult = false;
         queryResult.update(response);
       })
-      .catch(error => {
+      .catch((error) => {
         // Error handler
         queryResult.isLoadingResult = false;
         handleErrorResponse(queryResult, error);
@@ -365,7 +365,7 @@ class QueryResult {
       .then(response => {
         this.update(response);
       })
-      .catch(error => {
+      .catch((error) => {
         handleErrorResponse(this, error);
       });
   }
@@ -379,7 +379,7 @@ class QueryResult {
         this.update(response);
         this.isLoadingResult = false;
       })
-      .catch(error => {
+      .catch((error) => {
         if (tryCount === undefined) {
           tryCount = 0;
         }
@@ -422,7 +422,7 @@ class QueryResult {
           }, waitTime);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         logger("Connection error", error);
         // TODO: use QueryResultError, or better yet: exception/reject of promise.
         this.update({
@@ -458,7 +458,7 @@ class QueryResult {
           queryResult.refreshStatus(id, parameters);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         handleErrorResponse(queryResult, error);
       });
 
@@ -488,7 +488,7 @@ class QueryResult {
           queryResult.refreshStatus(query, parameters);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         handleErrorResponse(queryResult, error);
       });
 

@@ -73,7 +73,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
 
       return Promise.all(saveChangedWidgets)
         .then(() => setDashboardStatus(DashboardStatusEnum.SAVED))
-        .catch(error => {
+        .catch((error) => {
           setDashboardStatus(DashboardStatusEnum.SAVING_FAILED);
           if (error.response && error.response.status === 409) {
             notification.error("Version Conflict", "The dashboard layout has been modified. Please try saving again.", {

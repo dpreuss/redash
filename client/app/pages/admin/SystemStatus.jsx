@@ -54,7 +54,7 @@ class SystemStatus extends React.Component {
           status: omit(data, ["workers", "manager", "database_metrics"]),
         });
       })
-      .catch(error => this.props.onError(error));
+      .catch((error) => this.props.onError(error));
     this._refreshTimer = setTimeout(this.refresh, 60 * 1000);
   };
 

@@ -27,7 +27,7 @@ export default function useOrganizationSettings({ onError }) {
           setIsLoading(false);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         if (!isCancelled) {
           handleError(error);
         }

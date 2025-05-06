@@ -38,7 +38,7 @@ class EditDataSource extends React.Component {
         this.setState({ dataSource });
         DataSource.types().then(types => this.setState({ type: find(types, { type }), loading: false }));
       })
-      .catch(error => this.props.onError(error));
+      .catch((error) => this.props.onError(error));
   }
 
   saveDataSource = (values, successCallback, errorCallback) => {
@@ -46,7 +46,7 @@ class EditDataSource extends React.Component {
     helper.updateTargetWithValues(dataSource, values);
     DataSource.save(dataSource)
       .then(() => successCallback("Saved."))
-      .catch(error => {
+      .catch((error) => {
         const message = get(error, "response.data.message", "Failed saving.");
         errorCallback(message);
       });

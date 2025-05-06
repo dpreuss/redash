@@ -84,7 +84,7 @@ class DataSourcesList extends React.Component {
           }
         )
       )
-      .catch(error => this.props.onError(error));
+      .catch((error) => this.props.onError(error));
   }
 
   componentWillUnmount() {

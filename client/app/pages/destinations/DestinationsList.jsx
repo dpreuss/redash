@@ -54,7 +54,7 @@ class DestinationsList extends React.Component {
           }
         )
       )
-      .catch(error => this.props.onError(error));
+      .catch((error) => this.props.onError(error));
   }
 
   createDestination = (selectedType, values) => {

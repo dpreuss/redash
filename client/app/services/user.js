@@ -23,7 +23,7 @@ function enableUser(user) {
       user.profile_image_url = data.profile_image_url;
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Cannot enable user", getErrorMessage(error));
     });
 }
@@ -38,7 +38,7 @@ function disableUser(user) {
       user.profile_image_url = data.profile_image_url;
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Cannot disable user", getErrorMessage(error));
     });
 }
@@ -51,7 +51,7 @@ function deleteUser(user) {
       notification.warning(`User ${userName} has been deleted.`);
       return data;
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Cannot delete user", getErrorMessage(error));
     });
 }
@@ -76,7 +76,7 @@ function regenerateApiKey(user) {
       notification.success("The API Key has been updated.");
       return data.api_key;
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Failed regenerating API Key", getErrorMessage(error));
     });
 }
@@ -91,7 +91,7 @@ function sendPasswordReset(user) {
       }
       notification.success("Password reset email sent.");
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Failed to send password reset email", getErrorMessage(error));
     });
 }
@@ -106,7 +106,7 @@ function resendInvitation(user) {
       }
       notification.success("Invitation sent.");
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Failed to resend invitation", getErrorMessage(error));
     });
 }

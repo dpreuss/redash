@@ -87,7 +87,7 @@ function SelectItemsDialog({
   );
 
   const save = useCallback(() => {
-    dialog.close(selectedItems).catch(error => {
+    dialog.close(selectedItems).catch((error) => {
       if (error) {
         notification.error("Failed to save some of selected items.");
       }

@@ -84,7 +84,7 @@ export default function Router({ routes, onRouteChange }) {
               setCurrentRoute({ ...route, key: generateRouteKey() });
             }
           })
-          .catch(error => {
+          .catch((error) => {
             if (!isAbandoned && currentPathRef.current === pathname) {
               setCurrentRoute({
                 render: currentRoute => <ErrorMessage {...currentRoute.routeParams} />,
