@@ -1,18 +1,10 @@
 import { isNil, extend, each, includes, map, sortBy, toString } from "lodash";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
-import { AllColorPaletteArrays, ColorPaletteTypes } from "@/visualizations/ColorPalette";
+import { ColorPaletteArray } from "@/visualizations/ColorPalette";
 import { cleanNumber, normalizeValue, getSeriesAxis } from "./utils";
 
-function getSeriesColor(options: any, seriesOptions: any, seriesIndex: any, numSeries: any) {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  let palette = AllColorPaletteArrays[options.color_scheme];
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (ColorPaletteTypes[options.color_scheme] === 'continuous' && palette.length > numSeries) {
-    const step = (palette.length - 1) / (numSeries - 1 || 1);
-    const index = Math.round(step * seriesIndex);
-    return seriesOptions.color || palette[index % palette.length];
-  }
-  return seriesOptions.color || palette[seriesIndex % palette.length];
+function getSeriesColor(seriesOptions: any, seriesIndex: any) {
+  return seriesOptions.color || ColorPaletteArray[seriesIndex % ColorPaletteArray.length];
 }
 
 function getHoverInfoPattern(options: any) {
@@ -81,11 +73,11 @@ function prepareBoxSeries(series: any, options: any, { seriesColor }: any) {
   return series;
 }
 
-function prepareSeries(series: any, options: any, numSeries: any, additionalOptions: any) {
+function prepareSeries(series: any, options: any, additionalOptions: any) {
   const { hoverInfoPattern, index } = additionalOptions;
 
   const seriesOptions = extend({ type: options.globalSeriesType, yAxis: 0 }, options.seriesOptions[series.name]);
-  const seriesColor = getSeriesColor(options, seriesOptions, index, numSeries);
+  const seriesColor = getSeriesColor(seriesOptions, index);
   const seriesYAxis = getSeriesAxis(series, options);
 
   // Sort by x - `Map` preserves order of items
@@ -169,7 +161,6 @@ export default function prepareDefaultData(seriesList: any, options: any) {
   const additionalOptions = {
     hoverInfoPattern: getHoverInfoPattern(options),
   };
-  const numSeries = seriesList.length
 
-  return map(seriesList, (series, index) => prepareSeries(series, options, numSeries, { ...additionalOptions, index }));
+  return map(seriesList, (series, index) => prepareSeries(series, options, { ...additionalOptions, index }));
 }
