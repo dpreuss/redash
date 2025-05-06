@@ -59,9 +59,7 @@ function VisualizationWidgetHeader({
         <div className="th-title">
           <span>
             {hasChartName ? chartName : queryName}
-            {showHeader && hasChartName && queryName && (
-              <span> - {queryName}</span>
-            )}
+            {showHeader && hasChartName && queryName && <span> - {queryName}</span>}
             {showHeader && showDescription && (
               <>
                 <span> - </span>
@@ -245,12 +243,12 @@ class VisualizationWidget extends React.Component {
         ...widget.options,
         showHeader: !showHeader,
       };
-      widget.save('options', newOptions).then(() => {
+      widget.save("options", newOptions).then(() => {
         this.setState({ showHeader: !showHeader });
-        if (typeof onRefresh === 'function') {
+        if (typeof onRefresh === "function") {
           onRefresh();
         }
-        if (typeof onParameterMappingsChange === 'function') {
+        if (typeof onParameterMappingsChange === "function") {
           onParameterMappingsChange();
         }
       });
@@ -288,14 +286,14 @@ class VisualizationWidget extends React.Component {
           "Download as Excel File"
         )}
       </Menu.Item>,
-      (canEditParameters) && <Menu.Divider key="divider2" />,
+      canEditParameters && <Menu.Divider key="divider2" />,
       canEditParameters && (
         <Menu.Item key="edit_parameters" onClick={this.editParameterMappings}>
           Edit Parameter Mapping
         </Menu.Item>
       ),
     ]);
-  }
+  };
 
   editParameterMappings = () => {
     const { widget } = this.props;
@@ -310,7 +308,7 @@ class VisualizationWidget extends React.Component {
       onChange: this.props.onParameterMappingsChange,
     }).result.finally(() => {
       this.forceUpdate();
-      if (typeof this.props.onParameterMappingsChange === 'function') {
+      if (typeof this.props.onParameterMappingsChange === "function") {
         this.props.onParameterMappingsChange();
       }
     });
@@ -320,21 +318,24 @@ class VisualizationWidget extends React.Component {
     const { widget, onRefresh } = this.props;
     const paramOrder = map(parameters, "name");
     widget.options.paramOrder = paramOrder;
-    widget.save("options", { paramOrder }).then(() => {
-      if (typeof onRefresh === 'function') {
-        onRefresh();
-      }
-      this.forceUpdate();
-    }).catch(() => {
-      notification.error("Could not save parameter order.");
-    });
+    widget
+      .save("options", { paramOrder })
+      .then(() => {
+        if (typeof onRefresh === "function") {
+          onRefresh();
+        }
+        this.forceUpdate();
+      })
+      .catch(() => {
+        notification.error("Could not save parameter order.");
+      });
   };
 
   getParameters() {
     try {
       const { widget, filters } = this.props;
       const { localParameters } = this.state;
-      return invoke(widget, 'getParameters', filters, localParameters);
+      return invoke(widget, "getParameters", filters, localParameters);
     } catch (error) {
       // Handle error silently
       return [];
@@ -402,7 +403,7 @@ class VisualizationWidget extends React.Component {
   }
 
   render() {
-    const { widget, isPublic, /* canEdit, isLoading: isLoadingWidget */ } = this.props; // Commented out unused destructured props
+    const { widget, isPublic /* canEdit, isLoading: isLoadingWidget */ } = this.props; // Commented out unused destructured props
     const {
       // isLoading: isLoadingData, // Unused state variable
       // isError, // Unused state variable
