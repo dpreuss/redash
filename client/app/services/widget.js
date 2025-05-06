@@ -5,30 +5,24 @@ import {
   pick,
   extend,
   isObject,
-  truncate,
-  keys,
   difference,
-  filter,
-  map,
-  merge,
-  sortBy,
-  indexOf,
-  size,
-  includes,
-  isArray,
+  keys,
 } from "lodash";
-import location from "@/services/location";
-import { cloneParameter } from "@/services/parameters";
-import dashboardGridOptions from "@/config/dashboard-grid-options";
 import { registeredVisualizations } from "@redash/viz/lib";
 import { Query } from "./query";
 import { Parameter } from "@/services/parameters";
-import { ParameterMappingType } from "@/services/widget-parameters";
+import dashboardGridOptions from "@/config/dashboard-grid-options";
 
 export const WidgetTypeEnum = {
   TEXTBOX: "textbox",
   VISUALIZATION: "visualization",
   RESTRICTED: "restricted",
+};
+
+export const ParameterMappingType = {
+  DashboardLevel: "dashboard-level",
+  WidgetLevel: "widget-level",
+  StaticValue: "static-value",
 };
 
 function calculatePositionOptions(widget) {
@@ -107,10 +101,6 @@ class Widget {
     if (this.options.position.sizeY < 0) {
       this.options.position.autoHeight = true;
     }
-
-    if (isObject(this.options) && !isArray(this.options)) {
-      this.options = JSON.stringify(this.options);
-    }
   }
 
   get type() {
@@ -123,14 +113,16 @@ class Widget {
   }
 
   getQuery() {
-    if (!this.query && this.visualization) {
-      this.query = this.visualization.query;
+    if (!this.query && this.visualization && this.visualization.query) {
+      this.query = this.visualization.query instanceof Query
+        ? this.visualization.query
+        : new Query(this.visualization.query);
     }
     return this.query;
   }
 
   getQueryResult() {
-    return this.query_result || this.getQuery().getQueryResult();
+    return this.data;
   }
 
   getName() {
@@ -145,20 +137,59 @@ class Widget {
       return Promise.resolve();
     }
 
-    // Both `this.query` and `this.visualization.query` are the same object, but `this.query` might be null if not
-    // assigned yet. In this case, load from `this.visualization.query` but update `this.query` too, so on the
-    // next call to load, the condition above will return false and this block will be skipped.
-    if (!this.query && this.visualization.query) {
-      this.query = this.visualization.query;
+    // Both `this.data` and `this.queryResult` are query result objects;
+    // `this.data` is last loaded query result;
+    // `this.queryResult` is currently loading query result;
+    // while widget is refreshing, `this.data` !== `this.queryResult`
+
+    if (force || this.queryResult === undefined) {
+      this.loading = true;
+      this.refreshStartedAt = moment();
+
+      if (maxAge === undefined || force) {
+        maxAge = force ? 0 : undefined;
+      }
+
+      const queryResult = this.getQuery().getQueryResult(maxAge);
+      this.queryResult = queryResult;
+
+      queryResult
+        .toPromise()
+        .then(result => {
+          if (this.queryResult === queryResult) {
+            this.loading = false;
+            this.data = result;
+          }
+          return result;
+        })
+        .catch(error => {
+          if (this.queryResult === queryResult) {
+            this.loading = false;
+            this.data = error;
+          }
+          return error;
+        });
     }
 
-    return this.query.getQueryResult(force, maxAge).then(queryResult => {
-      this.query_result = queryResult;
-      return queryResult;
-    });
+    return this.queryResult.toPromise();
   }
 
-  save(data = {}) {
+  save(key, value) {
+    let data = pick(this, "options", "text", "id", "width", "dashboard_id", "visualization_id", "version");
+    
+    if (key) {
+      if (value) {
+        // If we're updating options, merge with existing options
+        if (key === 'options' && typeof value === 'object') {
+          data.options = { ...this.options, ...value };
+        } else {
+          data[key] = value;
+        }
+      } else {
+        data = key;
+      }
+    }
+
     let url = "api/widgets";
     if (this.id) {
       url = `${url}/${this.id}`;
@@ -210,10 +241,35 @@ class Widget {
   }
 
   getParameterMappings() {
-    if (!isObject(this.options)) {
-      this.options = JSON.parse(this.options);
+    if (!isObject(this.options.parameterMappings)) {
+      this.options.parameterMappings = {};
     }
-    return this.options.parameterMappings || [];
+
+    const existingParams = {};
+    // textboxes does not have query
+    const params = this.getQuery() ? this.getQuery().getParametersDefs(false) : [];
+    each(params, param => {
+      existingParams[param.name] = true;
+      if (!isObject(this.options.parameterMappings[param.name])) {
+        // "migration" for old dashboards: parameters with `global` flag
+        // should be mapped to a dashboard-level parameter with the same name
+        this.options.parameterMappings[param.name] = {
+          name: param.name,
+          type: param.global ? Widget.MappingType.DashboardLevel : Widget.MappingType.WidgetLevel,
+          mapTo: param.name, // map to param with the same name
+          value: null, // for StaticValue
+          title: "", // Use parameter's title
+        };
+      }
+    });
+
+    // Remove mappings for parameters that do not exists anymore
+    const removedParams = difference(keys(this.options.parameterMappings), keys(existingParams));
+    each(removedParams, name => {
+      delete this.options.parameterMappings[name];
+    });
+
+    return this.options.parameterMappings;
   }
 }
 

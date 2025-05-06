@@ -5,13 +5,13 @@ import { isEmpty, debounce, isEqual } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
-import Parameters from "@/components/Parameters";
 import Filters from "@/components/Filters";
 import { Dashboard } from "@/services/dashboard";
 import recordEvent from "@/services/recordEvent";
 import routes from "@/services/routes";
 import location from "@/services/location";
 import url from "@/services/url";
+import DashboardHeader from "./components/DashboardHeader";
 
 import { useDashboard } from "./hooks/useDashboard";
 
@@ -53,14 +53,15 @@ DashboardSettings.propTypes = {
   updateDashboard: PropTypes.func.isRequired,
 };
 
-function AddWidgetContainer({ className, dashboardOptions, ...props }) {
+function AddWidgetContainer({ className, dashboardConfiguration, ...props }) {
+  const { dashboard, canEditDashboard } = dashboardConfiguration;
   return (
     <div className={cx("add-widget-container", className)}>
       <h2>
         <i className="zmdi zmdi-widgets" />
         <span className="hidden-xs hidden-sm">Add Widget</span>
       </h2>
-      {dashboardOptions.canEdit ? (
+      {canEditDashboard ? (
         <div>
           <Button type="primary" onClick={props.onAddWidget}>
             Add Widget
@@ -73,7 +74,7 @@ function AddWidgetContainer({ className, dashboardOptions, ...props }) {
 
 AddWidgetContainer.propTypes = {
   onAddWidget: PropTypes.func.isRequired,
-  dashboardOptions: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+  dashboardConfiguration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
   className: PropTypes.string,
 };
 
@@ -97,28 +98,45 @@ export function normalizeLayout(layout) {
 }
 
 function DashboardComponent(props) {
-  const { dashboard, updateDashboard, loadDashboard } = useDashboard(props.dashboard);
-  const [gridDisabled, setGridDisabled] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [editingLayout, setEditingLayout] = useState(props.editingLayout);
-  const [isDashboardOwner, setIsDashboardOwner] = useState(false);
+  const dashboardConfiguration = useDashboard(props.dashboard);
+  const { updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard } = dashboardConfiguration;
   const [filters, setFilters] = useState([]);
+  const [editingLayout, setEditingLayout] = useState(props.editMode);
+  const [gridDisabled, setGridDisabled] = useState(false);
+  const [isPublic] = useState(false); // Default to false since this is the private dashboard view
 
+  useEffect(() => {
+    setEditingLayout(props.editMode);
+  }, [props.editMode]);
+
+  useEffect(() => {
+    recordEvent("view", "dashboard", props.dashboard.id);
+  }, [props.dashboard.id]);
+
+  const [refreshing, setRefreshing] = useState(false);
   const refreshDashboard = useCallback(() => {
     if (!refreshing) {
       setRefreshing(true);
-      loadDashboard().finally(() => setRefreshing(false));
+      const promises = props.dashboard.widgets.map(widget => refreshWidget(widget).catch(() => {}));
+      Promise.all(promises).finally(() => setRefreshing(false));
     }
-  }, [refreshing, loadDashboard]);
+  }, [refreshing, props.dashboard, refreshWidget]);
 
   useEffect(() => {
-    recordEvent("view", "dashboard", dashboard.id);
-
-    const refreshTimer = setInterval(refreshDashboard, dashboard.dashboard_filters_refresh_interval * 1000);
-    return () => {
-      clearInterval(refreshTimer);
+    const refreshDashboardIfNeeded = () => {
+      if (document.hidden) {
+        return;
+      }
+      const interval = props.dashboard.dashboard_filters_refresh_interval;
+      if (interval) {
+        refreshDashboard();
+      }
     };
-  }, [dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
+    document.addEventListener("visibilitychange", refreshDashboardIfNeeded);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshDashboardIfNeeded);
+    };
+  }, [props.dashboard.dashboard_filters_refresh_interval, refreshDashboard]);
 
   const onParameterMappingsChange = useCallback(() => {
     // Refresh dashboard when parameter mappings change
@@ -129,52 +147,58 @@ function DashboardComponent(props) {
   const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
   const handleLayoutChange = useCallback((newLayout) => {
     const normNew = normalizeLayout(newLayout);
-    const normCurrent = normalizeLayout(dashboard.layout);
+    const normCurrent = normalizeLayout(props.dashboard.layout);
     
     if (!isEqual(normNew, normCurrent)) {
       Object.freeze(normNew);
       debouncedUpdateDashboard({ layout: normNew });
     }
-  }, [dashboard.layout, debouncedUpdateDashboard]);
+  }, [props.dashboard.layout, debouncedUpdateDashboard]);
 
   return (
     <>
       <DashboardHeader
-        dashboard={dashboard}
-        isEditing={editingLayout}
-        gridDisabled={gridDisabled}
-        onRefresh={refreshDashboard}
-        onToggleEdit={() => setEditingLayout(!editingLayout)}
-        onChange={updateDashboard}
-        refreshing={refreshing}
+        dashboardConfiguration={{
+          dashboard: props.dashboard,
+          editingLayout,
+          updateDashboard,
+          togglePublished: props.togglePublished,
+          refreshing,
+          filters,
+          onRename: props.onRename,
+          onRefresh: refreshDashboard,
+          setEditingLayout,
+          gridDisabled,
+          setGridDisabled,
+          canEditDashboard,
+          fullscreen: false,
+          toggleFullscreen: () => {},
+          showShareDashboardDialog: () => {},
+          isDashboardOwnerOrAdmin: props.dashboard.canEdit(),
+          isDuplicating: false,
+          duplicateDashboard: () => {},
+          archiveDashboard: () => updateDashboard({ is_archived: true }),
+          managePermissions: () => {}
+        }}
+        headerExtra={null}
       />
-
-      {!isEmpty(dashboard.dashboard_filters_enabled) && (
-        <div className="dashboard-filters-wrapper">
-          <Filters
-            filters={filters}
-            onChange={setFilters}
-            onValuesChange={refreshDashboard}
-          />
+      {!isEmpty(props.dashboard.widgets) && props.dashboard.dashboard_filters_enabled && (
+        <div className="m-b-10 p-15 bg-white tiled">
+          <Filters filters={filters} onChange={setFilters} />
         </div>
       )}
-
-      {editingLayout && (
-        <DashboardSettings
-          dashboard={dashboard}
-          updateDashboard={updateDashboard}
-        />
-      )}
-
-      <div className="dashboard-container">
+      {editingLayout && <DashboardSettings dashboard={props.dashboard} updateDashboard={updateDashboard} />}
+      <div id="dashboard-container" className="dashboard-wrapper">
         <DashboardGrid
-          dashboard={dashboard}
-          widgets={dashboard.widgets}
+          dashboard={props.dashboard}
+          widgets={props.dashboard.widgets}
           filters={filters}
           isEditing={editingLayout}
-          onLayoutChange={handleLayoutChange}
-          onBreakpointChange={setGridDisabled}
+          onLoadWidget={loadWidget}
+          onRefreshWidget={refreshWidget}
           onRemoveWidget={removeWidget}
+          onBreakpointChange={setGridDisabled}
+          onLayoutChange={handleLayoutChange}
           onParameterMappingsChange={onParameterMappingsChange}
           isPublic={isPublic}
           isLoading={refreshing}
@@ -182,9 +206,8 @@ function DashboardComponent(props) {
       </div>
       {editingLayout && (
         <AddWidgetContainer
-          dashboardOptions={dashboard}
-          onAddWidget={() => setAddingWidget(true)}
-          className="add-widget-container"
+          dashboardConfiguration={dashboardConfiguration}
+          className={cx("add-widget-container", { disabled: gridDisabled })}
         />
       )}
     </>
@@ -192,50 +215,64 @@ function DashboardComponent(props) {
 }
 
 DashboardComponent.propTypes = {
-  dashboard: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-  editingLayout: PropTypes.bool,
-  isPublic: PropTypes.bool,
+  dashboard: PropTypes.object.isRequired,
+  editMode: PropTypes.bool,
+  togglePublished: PropTypes.func,
+  onRename: PropTypes.func,
 };
 
 DashboardComponent.defaultProps = {
-  editingLayout: false,
-  isPublic: false,
+  editMode: false,
+  togglePublished: () => {},
+  onRename: () => {},
 };
 
 function DashboardPage({ dashboardSlug, dashboardId, onError }) {
-  const [dashboard, setDashboard] = useState(null);
+  const [dashboard, setDashboard] = useState(null); // Remove if not used
   const handleError = onError;
 
   useEffect(() => {
     Dashboard.get({ id: dashboardId, slug: dashboardSlug })
-      .then(setDashboard)
+      .then(dashboardData => {
+        recordEvent("view", "dashboard", dashboardData.id);
+        setDashboard(dashboardData);
+
+        // if loaded by slug, update location url to use the id
+        if (!dashboardId) {
+          location.setPath(url.parse(dashboardData.url).pathname, true);
+        }
+      })
       .catch(handleError);
-  }, [dashboardSlug, dashboardId, handleError]);
+  }, [dashboardId, dashboardSlug, handleError]);
 
-  if (!dashboard) {
-    return null;
-  }
-
-  return <DashboardComponent dashboard={dashboard} />;
+  return <div className="dashboard-page">{dashboard && <DashboardComponent dashboard={dashboard} />}</div>;
 }
 
 DashboardPage.propTypes = {
   dashboardSlug: PropTypes.string,
-  dashboardId: PropTypes.number,
+  dashboardId: PropTypes.string,
   onError: PropTypes.func,
 };
 
 DashboardPage.defaultProps = {
   dashboardSlug: null,
   dashboardId: null,
-  onError: () => {},
+  onError: PropTypes.func,
 };
 
+// route kept for backward compatibility
 routes.register(
-  "Dashboard",
+  "Dashboards.LegacyViewOrEdit",
   routeWithUserSession({
     path: "/dashboard/:dashboardSlug",
-    render: pageProps => <DashboardPage {...pageProps} />,
+    render: pageProps => <DashboardPage {...pageProps} />, 
+  })
+);
+routes.register(
+  "Dashboards.ViewOrEdit",
+  routeWithUserSession({
+    path: "/dashboards/:dashboardId([^-]+)(-.*)?",
+    render: pageProps => <DashboardPage {...pageProps} />, 
   })
 );
 

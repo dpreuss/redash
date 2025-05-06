@@ -38,6 +38,15 @@ export function collectDashboardFilters(dashboard, queryResults, urlParams) {
 }
 
 function prepareWidgetsForDashboard(widgets) {
+  // Ensure all widgets have options and options.position objects, and sizeY is defined
+  widgets.forEach(w => {
+    w.options = w.options || {};
+    w.options.position = w.options.position || {};
+    if (typeof w.options.position.sizeY === 'undefined') {
+      w.options.position.sizeY = 1;
+    }
+  });
+
   // Default height for auto-height widgets.
   // Compute biggest widget size and choose between it and some magic number.
   // This value should be big enough so auto-height widgets will not overlap other ones.

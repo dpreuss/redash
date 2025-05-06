@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { compact, isEmpty, invoke, map } from "lodash";
+import { compact, isEmpty, invoke } from "lodash";
 import { markdown } from "markdown";
 import cx from "classnames";
 import Menu from "antd/lib/menu";
-import notification from "antd/lib/notification";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
 import { formatDateTime } from "@/lib/utils";
 import Link from "@/components/Link";
@@ -48,9 +47,10 @@ function VisualizationWidgetHeader({
   const chartName = widget.visualization.name;
   const defaultName = vizConfig ? vizConfig.name : "";
   const queryName = widget.getQuery().name;
-  const description = widget.getQuery().description;
-  const hasChartName = chartName && chartName !== defaultName;
-  const showDescription = !!description && description.trim() !== "";
+  const queryDescription = widget.getQuery().description;
+  const vizDescription = chartName && chartName !== defaultName ? chartName : "";
+  const isTable = widget.visualization.type === "TABLE";
+  const showQueryDescription = !!queryDescription && queryDescription.trim() !== "";
 
   return (
     <>
@@ -58,16 +58,28 @@ function VisualizationWidgetHeader({
       <div className="t-header widget clearfix">
         <div className="th-title">
           <span>
-            {hasChartName ? chartName : queryName}
-            {showHeader && hasChartName && queryName && (
-              <span> - {queryName}</span>
-            )}
-            {showHeader && showDescription && (
+            {showHeader ? (
               <>
-                <span> - </span>
-                <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
-                  {markdown.toHTML(description)}
-                </HtmlContent>
+                {queryName}
+                {showQueryDescription && (
+                  <>
+                    <span> - </span>
+                    <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
+                      {markdown.toHTML(queryDescription)}
+                    </HtmlContent>
+                  </>
+                )}
+                {vizDescription && (
+                  <>
+                    <span> - </span>
+                    <span>{vizDescription}</span>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {isTable && queryName && <span>{queryName} - </span>}
+                {vizDescription && <span>{vizDescription}</span>}
               </>
             )}
           </span>
@@ -258,7 +270,7 @@ class VisualizationWidget extends React.Component {
 
     return compact([
       <Menu.Item key="toggle_header" onClick={toggleHeader}>
-        {showHeader ? "Hide Query" : "Show Query"}
+        {showHeader ? "Hide Header" : "Show Header"}
       </Menu.Item>,
       <Menu.Divider key="divider1" />,
       <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>

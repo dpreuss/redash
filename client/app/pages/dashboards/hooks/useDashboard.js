@@ -77,10 +77,25 @@ export function useDashboard(dashboardData) {
       if (includeVersion) {
         data = { ...data, version: dashboard.version };
       }
-      return Dashboard.save(data).then(updatedDashboard => {
-        setDashboard(updatedDashboard);
-        return updatedDashboard;
-      });
+      return Dashboard.save(data)
+        .then(updatedDashboard => {
+          setDashboard(currentDashboard => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
+          if (has(data, "name")) {
+            location.setPath(url.parse(updatedDashboard.url).pathname, true);
+          }
+        })
+        .catch(error => {
+          const status = get(error, "response.status");
+          if (status === 403) {
+            notification.error("Dashboard update failed", "Permission Denied.");
+          } else if (status === 409) {
+            notification.error(
+              "Dashboard Version Conflict", 
+              "The dashboard has been modified by another user. Please reload the page to get the latest version.",
+              { duration: null }
+            );
+          }
+        });
     },
     [dashboard]
   );
@@ -92,7 +107,6 @@ export function useDashboard(dashboardData) {
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    setDashboard(currentDashboard => extend({}, currentDashboard));
     return widget
       .load(forceRefresh)
       .catch(error => {
@@ -101,8 +115,7 @@ export function useDashboard(dashboardData) {
           return;
         }
         return Promise.reject(error);
-      })
-      .finally(() => setDashboard(currentDashboard => extend({}, currentDashboard)));
+      });
   }, []);
 
   const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
@@ -118,18 +131,27 @@ export function useDashboard(dashboardData) {
   const dashboardRef = useRef();
   dashboardRef.current = dashboard;
 
-  const loadDashboard = useCallback(() => {
-    return Dashboard.get({ id: dashboard.id }).then(updatedDashboard => {
-      setDashboard(updatedDashboard);
-      return updatedDashboard;
-    });
-  }, [dashboard.id]);
+  const loadDashboard = useCallback(
+    (forceRefresh = false, updatedParameters = []) => {
+      const affectedWidgets = getAffectedWidgets(dashboard.widgets, updatedParameters);
+      const loadWidgetPromises = compact(
+        affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch(error => error))
+      );
+
+      return Promise.all(loadWidgetPromises).then(() => {
+        const queryResults = compact(map(dashboard.widgets, widget => widget.getQueryResult()));
+        const updatedFilters = collectDashboardFilters(dashboard, queryResults, location.search);
+        setFilters(updatedFilters);
+      });
+    },
+    [dashboard, loadWidget]
+  );
 
   const refreshDashboard = useCallback(
     updatedParameters => {
       if (!refreshing) {
         setRefreshing(true);
-        loadDashboard().finally(() => setRefreshing(false));
+        loadDashboard(true, updatedParameters).finally(() => setRefreshing(false));
       }
     },
     [refreshing, loadDashboard]
@@ -188,17 +210,6 @@ export function useDashboard(dashboardData) {
   useEffect(() => {
     setDashboard(dashboardData);
     loadDashboard();
-    // Initialize layout if empty
-    if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
-      const initialLayout = dashboardData.widgets.map(widget => ({
-        i: widget.id.toString(),
-        x: widget.options.position.col,
-        y: widget.options.position.row,
-        w: widget.options.position.sizeX,
-        h: widget.options.position.sizeY,
-      }));
-      setDashboard(currentDashboard => ({ ...currentDashboard, layout: initialLayout }));
-    }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

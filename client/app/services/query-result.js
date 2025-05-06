@@ -339,23 +339,18 @@ class QueryResult {
 
   static getById(queryId, id) {
     const queryResult = new QueryResult();
-
     queryResult.isLoadingResult = true;
     queryResult.deferred.onStatusChange(ExecutionStatus.LOADING_RESULT);
-
     axios
       .get(`api/queries/${queryId}/results/${id}.json`)
       .then(response => {
-        // Success handler
         queryResult.isLoadingResult = false;
         queryResult.update(response);
       })
       .catch(error => {
-        // Error handler
         queryResult.isLoadingResult = false;
         handleErrorResponse(queryResult, error);
       });
-
     return queryResult;
   }
 
@@ -448,12 +443,10 @@ class QueryResult {
 
   static getByQueryId(id, parameters, applyAutoLimit, maxAge) {
     const queryResult = new QueryResult();
-
     axios
       .post(`api/queries/${id}/results`, { id, parameters, apply_auto_limit: applyAutoLimit, max_age: maxAge })
       .then(response => {
         queryResult.update(response);
-
         if ("job" in response) {
           queryResult.refreshStatus(id, parameters);
         }
@@ -461,13 +454,11 @@ class QueryResult {
       .catch(error => {
         handleErrorResponse(queryResult, error);
       });
-
     return queryResult;
   }
 
   static get(dataSourceId, query, parameters, applyAutoLimit, maxAge, queryId) {
     const queryResult = new QueryResult();
-
     const params = {
       data_source_id: dataSourceId,
       parameters,
@@ -475,15 +466,12 @@ class QueryResult {
       apply_auto_limit: applyAutoLimit,
       max_age: maxAge,
     };
-
     if (queryId !== undefined) {
       params.query_id = queryId;
     }
-
     QueryResultResource.post(params)
       .then(response => {
         queryResult.update(response);
-
         if ("job" in response) {
           queryResult.refreshStatus(query, parameters);
         }
@@ -491,7 +479,6 @@ class QueryResult {
       .catch(error => {
         handleErrorResponse(queryResult, error);
       });
-
     return queryResult;
   }
 }
