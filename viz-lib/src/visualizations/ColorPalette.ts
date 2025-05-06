@@ -74,33 +74,6 @@ const D3Category10 = {
   10 : "#17becf",
 }
 
-const Redash20 = {
-  1 : "#007F78",
-  2 : "#008A7D",
-  3 : "#009582",
-  4 : "#14A18B",
-  5 : "#35AD95",
-  6 : "#59BA9F",
-  7 : "#7BC5A7",
-  8 : "#9CD0AF",
-  9 : "#B9DBB8",
-  10 : "#D1E5C1",
-  11 : "#E3ECC9",
-  12 : "#F1F3CE",
-  13 : "#FDF8D0",
-  14 : "#FCE8BE",
-  15 : "#F6C297",
-  16 : "#F1AE83",
-  17 : "#EB996E",
-  18 : "#E6845A",
-  19 : "#E06F45",
-  20 : "#D95A32",
-  21 : "#CE4B2B",
-  22 : "#C14026",
-  23 : "#B43621",
-  24 : "#A82C1D"
-}
-
 let ColorPalette = {
   ...BaseColors,
   ...AdditionalColors,
@@ -115,7 +88,6 @@ export const AllColorPalettes = {
   "Viridis" : Viridis,
   "Tableau 10" : Tableau,
   "D3 Category 10" : D3Category10,
-  "Redash 2.0" : Redash20,
 }
 
 export const AllColorPaletteArrays = {
@@ -123,7 +95,6 @@ export const AllColorPaletteArrays = {
   "Viridis" : values(Viridis),
   "Tableau 10" : values(Tableau),
   "D3 Category 10" : values(D3Category10),
-  "Redash 2.0" : values(Redash20),
 };
 
 export const ColorPaletteTypes = {
@@ -131,5 +102,4 @@ export const ColorPaletteTypes = {
   "Viridis" : 'continuous',
   "Tableau 10" : 'discrete',
   "D3 Category 10" : 'discrete',
-  "Redash 2.0" : 'continuous',
 }
