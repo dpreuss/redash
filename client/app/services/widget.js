@@ -10,7 +10,6 @@ import {
   difference,
   filter,
   map,
-  merge,
   sortBy,
   indexOf,
   size,
@@ -184,9 +183,19 @@ class Widget {
   }
 
   save(key, value) {
-    const data = pick(this, "options", "text", "id", "width", "dashboard_id", "visualization_id");
-    if (key && value) {
-      data[key] = merge({}, data[key], value); // done like this so `this.options` doesn't get updated by side-effect
+    let data = pick(this, "options", "text", "id", "width", "dashboard_id", "visualization_id", "version");
+    
+    if (key) {
+      if (value) {
+        // If we're updating options, merge with existing options
+        if (key === 'options' && typeof value === 'object') {
+          data.options = { ...this.options, ...value };
+        } else {
+          data[key] = value;
+        }
+      } else {
+        data = key;
+      }
     }
 
     let url = "api/widgets";
@@ -194,8 +203,8 @@ class Widget {
       url = `${url}/${this.id}`;
     }
 
-    return axios.post(url, data).then(data => {
-      each(data, (v, k) => {
+    return axios.post(url, data).then(response => {
+      each(response.data, (v, k) => {
         this[k] = v;
       });
 
