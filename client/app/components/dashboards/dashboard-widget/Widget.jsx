@@ -5,7 +5,6 @@ import { isEmpty } from "lodash";
 import Dropdown from "antd/lib/dropdown";
 import Modal from "antd/lib/modal";
 import Menu from "antd/lib/menu";
-import recordEvent from "@/services/recordEvent";
 import { Moment } from "@/components/proptypes";
 import PlainButton from "@/components/PlainButton";
 
@@ -69,10 +68,12 @@ class Widget extends React.Component {
     header: PropTypes.node,
     footer: PropTypes.node,
     canEdit: PropTypes.bool,
+    isPublic: PropTypes.bool,
     refreshStartedAt: Moment,
     menuOptions: PropTypes.node,
     tileProps: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     onDelete: PropTypes.func,
+    onLoad: PropTypes.func,
   };
 
   static defaultProps = {
@@ -81,15 +82,16 @@ class Widget extends React.Component {
     header: null,
     footer: null,
     canEdit: false,
+    isPublic: false,
     refreshStartedAt: null,
     menuOptions: null,
     tileProps: {},
     onDelete: () => {},
+    onLoad: () => {},
   };
 
   componentDidMount() {
-    const { widget } = this.props;
-    recordEvent("view", "widget", widget.id);
+    this.props.onLoad();
   }
 
   deleteWidget = () => {
@@ -107,8 +109,8 @@ class Widget extends React.Component {
   };
 
   render() {
-    const { className, children, header, footer, canEdit, menuOptions, tileProps } = this.props;
-    const showDropdownButton = (canEdit || !isEmpty(menuOptions));
+    const { className, children, header, footer, canEdit, isPublic, menuOptions, tileProps } = this.props;
+    const showDropdownButton = !isPublic && (canEdit || !isEmpty(menuOptions));
     return (
       <div className="widget-wrapper">
         <div className={cx("tile body-container", className)} {...tileProps}>
