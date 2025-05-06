@@ -34,7 +34,7 @@ clean:
 
 clean-all: clean
 	docker image rm --force \
-		redash/redash:10.1.0.b50633 redis:7-alpine maildev/maildev:latest \
+		redash/redash:latest redis:7-alpine maildev/maildev:latest \
 		pgautoupgrade/pgautoupgrade:15-alpine3.8 pgautoupgrade/pgautoupgrade:latest
 
 down:
@@ -80,7 +80,8 @@ bash:
 	docker compose run --rm server bash
 
 update_version:
-	@VERSION=$$(python ./manage.py version); \
-	FULL_VERSION="$$VERSION+`date +%Y%m%d%H%M%S`"; \
-	sed -i '' "s/^__version__ = \".*\"/__version__ = \"$$FULL_VERSION\"/" redash/__init__.py; \
-	echo "\"$$FULL_VERSION\"" > client/app/version.json
+	@echo "Updating version with current timestamp..."
+	@current_time=$$(date "+%Y%m%d%H%M") && \
+	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
+	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
+	rm -f pyproject.toml.bak redash/__init__.py.bak
