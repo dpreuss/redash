@@ -56,8 +56,8 @@ const mockWidget = {
     showHeader: true,
   },
   visualization: {
-    query: { id: 123, name: 'Test Query' },
-    name: 'Test Visualization',
+    query: { id: 123, name: "Test Query" },
+    name: "Test Visualization",
   },
 };
 
@@ -79,7 +79,7 @@ describe("VisualizationWidget", () => {
   describe("Header Visibility", () => {
     it("shows header by default", () => {
       render(<VisualizationWidget {...defaultProps} />);
-      
+
       // Header should contain query name
       expect(screen.getByText("Test Query")).toBeInTheDocument();
     });
@@ -92,9 +92,9 @@ describe("VisualizationWidget", () => {
           options: { showHeader: false },
         },
       };
-      
+
       render(<VisualizationWidget {...props} />);
-      
+
       // Header should not be present
       expect(screen.queryByText("Test Query")).not.toBeInTheDocument();
     });
@@ -105,12 +105,7 @@ describe("VisualizationWidget", () => {
         options: { showHeader: true },
       };
 
-      const wrapper = mount(
-        <VisualizationWidget
-          {...defaultProps}
-          widget={widget}
-        />
-      );
+      const wrapper = mount(<VisualizationWidget {...defaultProps} widget={widget} />);
 
       // Initially header should be visible
       expect(wrapper.find("VisualizationWidgetHeader")).toHaveLength(1);
@@ -134,12 +129,7 @@ describe("VisualizationWidget", () => {
         },
       };
 
-      const wrapper = mount(
-        <VisualizationWidget
-          {...defaultProps}
-          widget={widget}
-        />
-      );
+      const wrapper = mount(<VisualizationWidget {...defaultProps} widget={widget} />);
 
       // Find and click the toggle header menu item
       const toggleButton = wrapper.find('MenuItem[key="toggle_header"]');
@@ -155,7 +145,7 @@ describe("VisualizationWidget", () => {
 
   it("renders with header visible by default", () => {
     render(<VisualizationWidget {...defaultProps} />);
-    expect(screen.getByText('Test Visualization')).toBeInTheDocument();
+    expect(screen.getByText("Test Visualization")).toBeInTheDocument();
   });
 
   it("hides header when showHeader is false", () => {
@@ -164,22 +154,22 @@ describe("VisualizationWidget", () => {
       options: { ...mockWidget.options, showHeader: false },
     };
     render(<VisualizationWidget {...defaultProps} widget={widgetWithHiddenHeader} />);
-    expect(screen.queryByText('Test Visualization')).not.toBeInTheDocument();
+    expect(screen.queryByText("Test Visualization")).not.toBeInTheDocument();
   });
 
   it("shows header toggle option in menu when editing", () => {
     render(<VisualizationWidget {...defaultProps} isEditing={true} />);
-    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+    fireEvent.click(screen.getByRole("button", { name: /menu/i }));
     expect(screen.getByText(/toggle header/i)).toBeInTheDocument();
   });
 
   it("preserves other widget options when toggling header", () => {
     render(<VisualizationWidget {...defaultProps} isEditing={true} />);
-    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+    fireEvent.click(screen.getByRole("button", { name: /menu/i }));
     fireEvent.click(screen.getByText(/toggle header/i));
     expect(defaultProps.onParameterMappingsChange).toHaveBeenCalledWith({
       ...mockWidget.options,
       showHeader: false,
     });
   });
-}); 
+});
