@@ -80,7 +80,8 @@ bash:
 	docker compose run --rm server bash
 
 update_version:
-	@VERSION=$$(python ./manage.py version); \
-	FULL_VERSION="$$VERSION+`date +%Y%m%d%H%M%S`"; \
-	sed -i '' "s/^__version__ = \".*\"/__version__ = \"$$FULL_VERSION\"/" redash/__init__.py; \
-	echo "\"$$FULL_VERSION\"" > client/app/version.json
+	@echo "Updating version with current timestamp..."
+	@current_time=$$(date "+%Y%m%d%H%M") && \
+	sed -i.bak '/^\[tool\.poetry\]/,/^$$/s/^version = ".*"$$/version = "25.2.0.dev'$$current_time'"/' pyproject.toml && \
+	sed -i.bak 's/^__version__ = ".*"$$/__version__ = "25.2.0.dev'$$current_time'"/' redash/__init__.py && \
+	rm -f pyproject.toml.bak redash/__init__.py.bak
