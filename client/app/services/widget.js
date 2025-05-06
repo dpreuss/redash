@@ -170,7 +170,7 @@ class Widget {
           }
           return result;
         })
-        .catch((error) => {
+        .catch(error => {
           if (this.queryResult === queryResult) {
             this.loading = false;
             this.data = error;
