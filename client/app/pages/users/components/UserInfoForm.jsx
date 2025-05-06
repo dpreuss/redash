@@ -31,7 +31,7 @@ export default function UserInfoForm(props) {
           successCallback("Saved.");
           handleChange(User.convertUserInfo(user));
         })
-        .catch(error => {
+        .catch((error) => {
           errorCallback(get(error, "response.data.message", "Failed saving."));
         });
     },

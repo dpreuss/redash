@@ -59,7 +59,7 @@ export class ItemsSource {
             return this._afterUpdate();
           }
         })
-        .catch(error => this.handleError(error));
+        .catch((error) => this.handleError(error));
     });
   }
 

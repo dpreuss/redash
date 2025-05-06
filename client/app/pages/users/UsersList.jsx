@@ -160,7 +160,7 @@ class UsersList extends React.Component {
           });
         }
       })
-      .catch(error => {
+      .catch((error) => {
         const message = find([get(error, "response.data.message"), get(error, "message"), "Failed saving."], isString);
         return Promise.reject(new Error(message));
       });

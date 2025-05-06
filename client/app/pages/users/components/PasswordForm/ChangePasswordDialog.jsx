@@ -72,7 +72,7 @@ class ChangePasswordDialog extends React.Component {
               notification.success("Saved.");
               this.props.dialog.close({ success: true });
             })
-            .catch(error => {
+            .catch((error) => {
               notification.error(get(error, "response.data.message", "Failed saving."));
               this.setState({ updatingPassword: false });
             });

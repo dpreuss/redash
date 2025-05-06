@@ -104,7 +104,7 @@ class GroupDataSources extends React.Component {
         this.group = group;
         this.forceUpdate();
       })
-      .catch(error => {
+      .catch((error) => {
         this.props.controller.handleError(error);
       });
   }

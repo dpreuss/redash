@@ -87,7 +87,7 @@ class QuerySnippetsList extends React.Component {
       } else {
         QuerySnippet.get({ id: querySnippetId })
           .then(this.showSnippetDialog)
-          .catch(error => {
+          .catch((error) => {
             this.props.controller.handleError(error);
           });
       }

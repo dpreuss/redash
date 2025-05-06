@@ -30,7 +30,7 @@ function UserProfile({ userId, onError }) {
           setUser(User.convertUserInfo(user));
         }
       })
-      .catch(error => {
+      .catch((error) => {
         if (!isCancelled) {
           handleError(error);
         }

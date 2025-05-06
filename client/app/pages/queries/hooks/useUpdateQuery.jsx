@@ -58,7 +58,7 @@ function doSaveQuery(data, { canOverwrite = false } = {}) {
     };
   }
 
-  return Query.save(data).catch(error => {
+  return Query.save(data).catch((error) => {
     if (get(error, "response.status") === 409) {
       if (canOverwrite) {
         return confirmOverwrite()
@@ -113,7 +113,7 @@ export default function useUpdateQuery(query, onChange) {
             )
           );
         })
-        .catch(error => {
+        .catch((error) => {
           const notificationOptions = {};
           if (error instanceof SaveQueryConflictError) {
             notificationOptions.duration = null;

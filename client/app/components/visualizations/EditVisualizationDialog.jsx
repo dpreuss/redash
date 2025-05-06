@@ -44,7 +44,7 @@ function saveVisualization(visualization) {
       notification.success("Visualization saved");
       return result;
     })
-    .catch(error => {
+    .catch((error) => {
       notification.error("Visualization could not be saved");
       return Promise.reject(error);
     });
