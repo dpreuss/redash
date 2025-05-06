@@ -163,14 +163,14 @@ class Widget {
 
       queryResult
         .toPromise()
-        .then(result => {
+        .then((result) => {
           if (this.queryResult === queryResult) {
             this.loading = false;
             this.data = result;
           }
           return result;
         })
-        .catch(error => {
+        .catch((error) => {
           if (this.queryResult === queryResult) {
             this.loading = false;
             this.data = error;
@@ -203,7 +203,7 @@ class Widget {
       url = `${url}/${this.id}`;
     }
 
-    return axios.post(url, data).then(response => {
+    return axios.post(url, data).then((response) => {
       each(response.data, (v, k) => {
         this[k] = v;
       });
