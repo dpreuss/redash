@@ -16,7 +16,6 @@ from redash.query_runner import import_query_runners
 
 __version__ = "25.2.0.dev202504241213"
 
-
 if os.environ.get("REMOTE_DEBUG"):
     import debugpy
 
