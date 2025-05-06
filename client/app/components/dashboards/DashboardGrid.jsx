@@ -207,7 +207,7 @@ class DashboardGrid extends React.Component {
     // Convert layout to object format expected by the model
     const normalized = chain(layouts[MULTI])
       .keyBy("i")
-      .mapValues(item => ({
+      .mapValues((item) => ({
         col: item.x,
         row: item.y,
         sizeX: item.w,
@@ -224,7 +224,7 @@ class DashboardGrid extends React.Component {
     }
   };
 
-  onBreakpointChange = mode => {
+  onBreakpointChange = (mode) => {
     this.mode = mode;
     this.props.onBreakpointChange(mode === SINGLE);
   };
@@ -281,8 +281,9 @@ class DashboardGrid extends React.Component {
           layouts={this.state.layouts}
           onLayoutChange={this.onLayoutChange}
           onBreakpointChange={this.onBreakpointChange}
-          breakpoints={{ [MULTI]: cfg.mobileBreakPoint, [SINGLE]: 0 }}>
-          {widgets.map(widget => (
+          breakpoints={{ [MULTI]: cfg.mobileBreakPoint, [SINGLE]: 0 }}
+        >
+          {widgets.map((widget) => (
             <div
               key={widget.id}
               data-grid={DashboardGrid.normalizeFrom(widget)}
@@ -290,7 +291,8 @@ class DashboardGrid extends React.Component {
               data-test={`WidgetId${widget.id}`}
               className={cx("dashboard-widget-wrapper", {
                 "widget-auto-height-enabled": this.autoHeightCtrl.exists(widget.id),
-              })}>
+              })}
+            >
               <DashboardWidget
                 dashboard={dashboard}
                 widget={widget}
