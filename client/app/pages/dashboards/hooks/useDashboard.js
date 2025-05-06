@@ -135,7 +135,7 @@ export function useDashboard(dashboardData) {
     (forceRefresh = false, updatedParameters = []) => {
       const affectedWidgets = getAffectedWidgets(dashboard.widgets, updatedParameters);
       const loadWidgetPromises = compact(
-        affectedWidgets.map(widget => loadWidget(widget, forceRefresh).catch(error => error))
+        affectedWidgets.map((widget) => loadWidget(widget, forceRefresh).catch((error) => error))
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
