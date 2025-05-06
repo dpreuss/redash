@@ -66,7 +66,6 @@ const DashboardWidget = React.memo(
           onRefresh={onRefresh}
           onDelete={onDelete}
           onParameterMappingsChange={onParameterMappingsChange}
-          backgroundColor={dashboard.options?.backgroundColor}
         />
       );
     }
@@ -148,30 +147,13 @@ class DashboardGrid extends React.Component {
 
   componentDidMount() {
     this.onBreakpointChange(document.body.offsetWidth <= cfg.mobileBreakPoint ? SINGLE : MULTI);
-    // Work-around to disable initial animation on widgets; `measureBeforeMount` doesn't work properly:
-    // it disables animation, but it cannot detect scrollbars.
     setTimeout(() => {
       this.setState({ disableAnimations: false });
     }, 50);
-
-    // Set background color CSS variable
-    const wrapper = document.querySelector('.dashboard-wrapper');
-    if (wrapper) {
-      wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
-    }
   }
 
   componentDidUpdate(prevProps) {
-    // update, in case widgets added or removed
     this.autoHeightCtrl.update(this.props.widgets);
-
-    // Update background color if changed
-    if (prevProps.dashboard.options?.backgroundColor !== this.props.dashboard.options?.backgroundColor) {
-      const wrapper = document.querySelector('.dashboard-wrapper');
-      if (wrapper) {
-        wrapper.style.setProperty('--dashboard-background-color', this.props.dashboard.options?.backgroundColor || '#ffffff');
-      }
-    }
   }
 
   componentWillUnmount() {

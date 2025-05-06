@@ -13,7 +13,6 @@ function Widget({
   onRefreshWidget,
   onRemoveWidget,
   onParameterMappingsChange,
-  backgroundColor,
 }) {
   const { type } = widget;
   const onLoad = () => onLoadWidget(widget);
@@ -34,7 +33,6 @@ function Widget({
         onRefresh={onRefresh}
         onDelete={onDelete}
         onParameterMappingsChange={onParameterMappingsChange}
-        backgroundColor={backgroundColor}
       />
     );
   }
@@ -61,7 +59,6 @@ Widget.propTypes = {
   onRefreshWidget: PropTypes.func,
   onRemoveWidget: PropTypes.func,
   onParameterMappingsChange: PropTypes.func,
-  backgroundColor: PropTypes.string,
 };
 
 Widget.defaultProps = {
@@ -72,7 +69,6 @@ Widget.defaultProps = {
   onRefreshWidget: () => {},
   onRemoveWidget: () => {},
   onParameterMappingsChange: () => {},
-  backgroundColor: null,
 };
 
 export default Widget; 

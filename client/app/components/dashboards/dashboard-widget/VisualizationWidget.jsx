@@ -197,7 +197,6 @@ class VisualizationWidget extends React.Component {
     onDelete: PropTypes.func,
     onParameterMappingsChange: PropTypes.func,
     onOptionsChange: PropTypes.func,
-    backgroundColor: PropTypes.string,
   };
 
   static defaultProps = {
@@ -211,7 +210,6 @@ class VisualizationWidget extends React.Component {
     onDelete: () => {},
     onParameterMappingsChange: () => {},
     onOptionsChange: () => {},
-    backgroundColor: null,
   };
 
   constructor(props) {
@@ -378,7 +376,6 @@ class VisualizationWidget extends React.Component {
               queryResult={widgetQueryResult}
               filters={filters}
               context="widget"
-              backgroundColor={this.props.backgroundColor}
             />
           </div>
         );

@@ -12,45 +12,28 @@ import routes from "@/services/routes";
 import location from "@/services/location";
 import url from "@/services/url";
 import DashboardHeader from "./components/DashboardHeader";
+import Checkbox from "antd/lib/checkbox";
 
 import { useDashboard } from "./hooks/useDashboard";
 
 import "./DashboardPage.less";
 
-function DashboardSettings({ dashboard, updateDashboard }) {
-  const [localBackgroundColor, setLocalBackgroundColor] = useState(
-    dashboard.options?.backgroundColor || '#ffffff'
-  );
-
-  const handleBackgroundColorChange = (color) => {
-    setLocalBackgroundColor(color);
-    updateDashboard({
-      options: {
-        ...dashboard.options,
-        backgroundColor: color,
-      },
-    });
-  };
-
+function DashboardSettings({ dashboardConfiguration }) {
+  const { dashboard, updateDashboard } = dashboardConfiguration;
   return (
     <div className="m-b-10 p-15 bg-white tiled">
-      <h5>Dashboard Settings</h5>
-      <div className="m-t-10">
-        <label htmlFor="backgroundColor">Background Color:</label>
-        <input
-          type="color"
-          id="backgroundColor"
-          value={localBackgroundColor}
-          onChange={(e) => handleBackgroundColorChange(e.target.value)}
-        />
-      </div>
+      <Checkbox
+        checked={!!dashboard.dashboard_filters_enabled}
+        onChange={({ target }) => updateDashboard({ dashboard_filters_enabled: target.checked })}
+        data-test="DashboardFiltersCheckbox">
+        Use Dashboard Level Filters
+      </Checkbox>
     </div>
   );
 }
 
 DashboardSettings.propTypes = {
-  dashboard: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-  updateDashboard: PropTypes.func.isRequired,
+  dashboardConfiguration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
 };
 
 function AddWidgetContainer({ className, dashboardConfiguration, ...props }) {
@@ -187,7 +170,7 @@ function DashboardComponent(props) {
           <Filters filters={filters} onChange={setFilters} />
         </div>
       )}
-      {editingLayout && <DashboardSettings dashboard={props.dashboard} updateDashboard={updateDashboard} />}
+      {editingLayout && <DashboardSettings dashboardConfiguration={dashboardConfiguration} />}
       <div id="dashboard-container" className="dashboard-wrapper">
         <DashboardGrid
           dashboard={props.dashboard}
@@ -228,7 +211,7 @@ DashboardComponent.defaultProps = {
 };
 
 function DashboardPage({ dashboardSlug, dashboardId, onError }) {
-  const [dashboard, setDashboard] = useState(null); // Remove if not used
+  const [dashboard, setDashboard] = useState(null);
   const handleError = onError;
 
   useEffect(() => {
