@@ -57,7 +57,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
 
         const saveWidget = () => widget.save("options", { position });
 
-        return saveWidget().catch(error => {
+        return saveWidget().catch((error) => {
           if (error.response && error.response.status === 409) {
             // If we get a version conflict, refresh the widget data and try again
             return axios.get(`api/widgets/${widget.id}`).then(response => {
