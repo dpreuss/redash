@@ -28,78 +28,62 @@ export const AdditionalColors = {
   "Pink 2": "#C63FA9",
 };
 
+const Starfish = {
+  1: '#44ac80', // green-500
+  2: '#77cdff', // marine-500
+  3: '#6781b2', // dark-blue-500
+  4: '#ae6f91', // purple-500
+  5: '#ffaa36', // orange-500
+  6: '#cc5757', // red-500
+  7: '#aac06a', // lime-500
+  8: '#90a0b6', // slate-500
+};
+
 const Viridis = {
-  1: "#440154",
-  2: "#48186a",
-  3: "#472d7b",
-  4: "#424086",
-  5: "#3b528b",
-  6: "#33638d",
-  7: "#2c728e",
-  8: "#26828e",
-  9: "#21918c",
-  10: "#1fa088",
-  11: "#28ae80",
-  12: "#3fbc73",
-  13: "#5ec962",
-  14: "#84d44b",
-  15: "#addc30",
-  16: "#d8e219",
-  17: "#fde725",
+  1: '#440154',
+  2: '#48186a',
+  3: '#472d7b',
+  4: '#424086',
+  5: '#3b528b',
+  6: '#33638d',
+  7: '#2c728e',
+  8: '#26828e',
+  9: '#21918c',
+  10: '#1fa088',
+  11: '#28ae80',
+  12: '#3fbc73',
+  13: '#5ec962',
+  14: '#84d44b',
+  15: '#addc30',
+  16: '#d8e219',
+  17: '#fde725',
 };
 
 const Tableau = {
-  1: "#4e79a7",
-  2: "#f28e2c",
-  3: "#e15759",
-  4: "#76b7b2",
-  5: "#59a14f",
-  6: "#edc949",
-  7: "#af7aa1",
-  8: "#ff9da7",
-  9: "#9c755f",
-  10: "#bab0ab",
-};
+  1 : "#4e79a7",
+  2 : "#f28e2c",
+  3 : "#e15759",
+  4 : "#76b7b2",
+  5 : "#59a14f",
+  6 : "#edc949",
+  7 : "#af7aa1",
+  8 : "#ff9da7",
+  9 : "#9c755f",
+  10 : "#bab0ab",
+}
 
 const D3Category10 = {
-  1: "#1f77b4",
-  2: "#ff7f0e",
-  3: "#2ca02c",
-  4: "#d62728",
-  5: "#9467bd",
-  6: "#8c564b",
-  7: "#e377c2",
-  8: "#7f7f7f",
-  9: "#bcbd22",
-  10: "#17becf",
-};
-
-const Redash20 = {
-  1: "#007F78",
-  2: "#008A7D",
-  3: "#009582",
-  4: "#14A18B",
-  5: "#35AD95",
-  6: "#59BA9F",
-  7: "#7BC5A7",
-  8: "#9CD0AF",
-  9: "#B9DBB8",
-  10: "#D1E5C1",
-  11: "#E3ECC9",
-  12: "#F1F3CE",
-  13: "#FDF8D0",
-  14: "#FCE8BE",
-  15: "#F6C297",
-  16: "#F1AE83",
-  17: "#EB996E",
-  18: "#E6845A",
-  19: "#E06F45",
-  20: "#D95A32",
-  21: "#CE4B2B",
-  22: "#C14026",
-  23: "#B43621",
-  24: "#A82C1D",
-};
+  1 : "#1f77b4",
+  2 : "#ff7f0e",
+  3 : "#2ca02c",
+  4 : "#d62728",
+  5 : "#9467bd",
+  6 : "#8c564b",
+  7 : "#e377c2",
+  8 : "#7f7f7f",
+  9 : "#bcbd22",
+  10 : "#17becf",
+}
 
 let ColorPalette = {
   ...BaseColors,
@@ -111,25 +95,25 @@ export const ColorPaletteArray = values(ColorPalette);
 export default ColorPalette;
 
 export const AllColorPalettes = {
-  Redash: ColorPalette,
-  Viridis: Viridis,
-  "Tableau 10": Tableau,
-  "D3 Category 10": D3Category10,
-  "Redash 2.0": Redash20,
-};
+  "D3 Category 10" : D3Category10,
+  "Redash" : ColorPalette,
+  "Starfish" : Starfish,
+  "Tableau 10" : Tableau,
+  "Viridis" : Viridis,
+}
 
 export const AllColorPaletteArrays = {
-  Redash: ColorPaletteArray,
-  Viridis: values(Viridis),
-  "Tableau 10": values(Tableau),
-  "D3 Category 10": values(D3Category10),
-  "Redash 2.0": values(Redash20),
+  "D3 Category 10" : values(D3Category10),
+  "Redash" : ColorPaletteArray,
+  "Starfish" : values(Starfish),
+  "Tableau 10" : values(Tableau),
+  "Viridis" : values(Viridis),
 };
 
 export const ColorPaletteTypes = {
-  Redash: "discrete",
-  Viridis: "continuous",
-  "Tableau 10": "discrete",
-  "D3 Category 10": "discrete",
-  "Redash 2.0": "continuous",
-};
+  "D3 Category 10" : 'discrete',
+  "Redash" : 'discrete',
+  "Starfish" : 'discrete',
+  "Tableau 10" : 'discrete',
+  "Viridis" : 'continuous',
+}
