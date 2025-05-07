@@ -37,15 +37,15 @@ const DashboardWidget = React.memo(
   function DashboardWidget({
     widget,
     dashboard,
-    filters,
-    isEditing,
-    canEdit,
-    isPublic,
-    isLoading,
     onLoadWidget,
     onRefreshWidget,
     onRemoveWidget,
     onParameterMappingsChange,
+    isEditing,
+    canEdit,
+    isPublic,
+    isLoading,
+    filters,
   }) {
     const { type } = widget;
     const onLoad = () => onLoadWidget(widget);
@@ -66,7 +66,6 @@ const DashboardWidget = React.memo(
           onRefresh={onRefresh}
           onDelete={onDelete}
           onParameterMappingsChange={onParameterMappingsChange}
-          backgroundColor={dashboard.options?.backgroundColor}
         />
       );
     }
@@ -153,31 +152,11 @@ class DashboardGrid extends React.Component {
     setTimeout(() => {
       this.setState({ disableAnimations: false });
     }, 50);
-
-    // Set background color CSS variable
-    const wrapper = document.querySelector(".dashboard-wrapper");
-    if (wrapper) {
-      wrapper.style.setProperty(
-        "--dashboard-background-color",
-        this.props.dashboard.options?.backgroundColor || "#ffffff"
-      );
-    }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     // update, in case widgets added or removed
     this.autoHeightCtrl.update(this.props.widgets);
-
-    // Update background color if changed
-    if (prevProps.dashboard.options?.backgroundColor !== this.props.dashboard.options?.backgroundColor) {
-      const wrapper = document.querySelector(".dashboard-wrapper");
-      if (wrapper) {
-        wrapper.style.setProperty(
-          "--dashboard-background-color",
-          this.props.dashboard.options?.backgroundColor || "#ffffff"
-        );
-      }
-    }
   }
 
   componentWillUnmount() {
@@ -189,9 +168,7 @@ class DashboardGrid extends React.Component {
     // fixes test dashboard_spec['shows widgets with full width']
     // TODO: open react-grid-layout issue
     if (layouts[MULTI]) {
-      // Create a deep copy of layouts to prevent mutation
-      const newLayouts = JSON.parse(JSON.stringify(layouts));
-      this.setState({ layouts: newLayouts });
+      this.setState({ layouts });
     }
 
     // workaround for https://github.com/STRML/react-grid-layout/issues/889
@@ -204,24 +181,12 @@ class DashboardGrid extends React.Component {
       return;
     }
 
-    // Convert layout to object format expected by the model
     const normalized = chain(layouts[MULTI])
       .keyBy("i")
-      .mapValues(item => ({
-        col: item.x,
-        row: item.y,
-        sizeX: item.w,
-        sizeY: item.h,
-        autoHeight: this.autoHeightCtrl.exists(item.i),
-      }))
+      .mapValues(this.normalizeTo)
       .value();
 
-    // Ensure we're passing an object, not an array
-    if (normalized && typeof normalized === "object" && !Array.isArray(normalized)) {
-      // Create an immutable copy before passing to parent
-      const immutableLayout = Object.freeze({ ...normalized });
-      this.props.onLayoutChange(immutableLayout);
-    }
+    this.props.onLayoutChange(normalized);
   };
 
   onBreakpointChange = mode => {
@@ -251,6 +216,14 @@ class DashboardGrid extends React.Component {
 
     this.autoHeightCtrl.resume();
   };
+
+  normalizeTo = layout => ({
+    col: layout.x,
+    row: layout.y,
+    sizeX: layout.w,
+    sizeY: layout.h,
+    autoHeight: this.autoHeightCtrl.exists(layout.i),
+  });
 
   render() {
     const {
