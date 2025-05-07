@@ -21,7 +21,7 @@ function prepareXAxis(axisOptions: any, additionalOptions: any) {
     title: getAxisTitle(axisOptions),
     type: getAxisScaleType(axisOptions),
     automargin: true,
-    tickformat: axisOptions.tickFormat ?? null,
+    tickformat: axisOptions.tickFormat,
   };
 
   if (additionalOptions.sortX && axis.type === "category") {
@@ -49,7 +49,7 @@ function prepareYAxis(axisOptions: any) {
     automargin: true,
     autorange: true,
     range: null,
-    tickformat: axisOptions.tickFormat ?? null,
+    tickformat: axisOptions.tickFormat,
   };
 }
 
@@ -109,7 +109,7 @@ function prepareBoxLayout(layout: any, options: any, data: any) {
 }
 
 export default function prepareLayout(element: any, options: any, data: any) {
-  const layout: any = {
+  const layout = {
     margin: { l: 10, r: 10, b: 5, t: 20, pad: 4 },
     // plot size should be at least 5x5px
     width: Math.max(5, Math.floor(element.offsetWidth)),
@@ -122,13 +122,7 @@ export default function prepareLayout(element: any, options: any, data: any) {
     hoverlabel: {
       namelength: -1,
     },
-    paper_bgcolor: options.backgroundColor || "#ffffff",
-    plot_bgcolor: options.backgroundColor || "#ffffff",
   };
-
-  if (["line", "area", "column"].includes(options.globalSeriesType)) {
-    layout.hovermode = options.swappedAxes ? "y" : "x";
-  }
 
   switch (options.globalSeriesType) {
     case "pie":
