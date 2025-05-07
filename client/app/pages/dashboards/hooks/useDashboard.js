@@ -23,12 +23,12 @@ export { DashboardStatusEnum };
 
 function getAffectedWidgets(widgets, updatedParameters = []) {
   return !isEmpty(updatedParameters)
-    ? widgets.filter(widget =>
+    ? widgets.filter((widget) =>
         Object.values(widget.getParameterMappings())
           .filter(({ type }) => type === "dashboard-level")
           .some(({ mapTo }) =>
             includes(
-              updatedParameters.map(p => p.name),
+              updatedParameters.map((p) => p.name),
               mapTo
             )
           )
@@ -41,11 +41,10 @@ export function useDashboard(dashboardData) {
   const [filters, setFilters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [gridDisabled, setGridDisabled] = useState(false);
-  const globalParameters = useMemo(() =>
-    dashboard && typeof dashboard.getParametersDefs === "function"
-      ? dashboard.getParametersDefs()
-      : []
-  , [dashboard]);
+  const globalParameters = useMemo(
+    () => (dashboard && typeof dashboard.getParametersDefs === "function" ? dashboard.getParametersDefs() : []),
+    [dashboard]
+  );
   const canEditDashboard = !dashboard.is_archived && policy.canEdit(dashboard);
   const isDashboardOwnerOrAdmin = useMemo(
     () =>
@@ -55,7 +54,7 @@ export function useDashboard(dashboardData) {
     [dashboard]
   );
   const hasOnlySafeQueries = useMemo(
-    () => every(dashboard.widgets, w => (w.getQuery() ? w.getQuery().is_safe : true)),
+    () => every(dashboard.widgets, (w) => (w.getQuery() ? w.getQuery().is_safe : true)),
     [dashboard]
   );
 
@@ -76,14 +75,16 @@ export function useDashboard(dashboardData) {
       if (data.layout) {
         data.layout = normalizeLayout(data.layout);
       }
-      setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, ...data }));
+      setDashboard((currentDashboard) => new Dashboard({ ...currentDashboard, ...data }));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
         data = { ...data, version: dashboard.version };
       }
       return Dashboard.save(data)
         .then((updatedDashboard) => {
-          setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, ...pick(updatedDashboard, keys(data)) }));
+          setDashboard(
+            (currentDashboard) => new Dashboard({ ...currentDashboard, ...pick(updatedDashboard, keys(data)) })
+          );
           if (has(data, "name")) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
@@ -123,13 +124,16 @@ export function useDashboard(dashboardData) {
     });
   }, []);
 
-  const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
+  const refreshWidget = useCallback((widget) => loadWidget(widget, true), [loadWidget]);
 
-  const removeWidget = useCallback(widgetId => {
-    setDashboard(currentDashboard => new Dashboard({
-      ...currentDashboard,
-      widgets: currentDashboard.widgets.filter(widget => widget.id !== undefined && widget.id !== widgetId),
-    }));
+  const removeWidget = useCallback((widgetId) => {
+    setDashboard(
+      (currentDashboard) =>
+        new Dashboard({
+          ...currentDashboard,
+          widgets: currentDashboard.widgets.filter((widget) => widget.id !== undefined && widget.id !== widgetId),
+        })
+    );
   }, []);
 
   const dashboardRef = useRef();
@@ -143,7 +147,7 @@ export function useDashboard(dashboardData) {
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
-        const queryResults = compact(map(dashboard.widgets, widget => widget.getQueryResult()));
+        const queryResults = compact(map(dashboard.widgets, (widget) => widget.getQueryResult()));
         const updatedFilters = collectDashboardFilters(dashboard, queryResults, location.search);
         setFilters(updatedFilters);
       });
@@ -152,7 +156,7 @@ export function useDashboard(dashboardData) {
   );
 
   const refreshDashboard = useCallback(
-    updatedParameters => {
+    (updatedParameters) => {
       if (!refreshing) {
         setRefreshing(true);
         loadDashboard(true, updatedParameters).finally(() => setRefreshing(false));
@@ -169,7 +173,7 @@ export function useDashboard(dashboardData) {
   }, [dashboard]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showShareDashboardDialog = useCallback(() => {
-    const handleDialogClose = () => setDashboard(currentDashboard => extend({}, currentDashboard));
+    const handleDialogClose = () => setDashboard((currentDashboard) => extend({}, currentDashboard));
 
     ShareDashboardDialog.showModal({
       dashboard,
@@ -216,14 +220,14 @@ export function useDashboard(dashboardData) {
     loadDashboard();
     // Initialize layout if empty
     if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
-      const initialLayout = dashboardData.widgets.map(widget => ({
+      const initialLayout = dashboardData.widgets.map((widget) => ({
         i: widget.id.toString(),
         x: widget.options.position.col,
         y: widget.options.position.row,
         w: widget.options.position.sizeX,
         h: widget.options.position.sizeY,
       }));
-      setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, layout: initialLayout }));
+      setDashboard((currentDashboard) => new Dashboard({ ...currentDashboard, layout: initialLayout }));
     }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 
