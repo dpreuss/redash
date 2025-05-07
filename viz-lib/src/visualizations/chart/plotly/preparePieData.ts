@@ -24,6 +24,29 @@ function getPieHoverInfoPattern(options: any) {
 }
 
 function prepareSeries(series: any, options: any, additionalOptions: any) {
+  // Defensive: ensure series.data is an array
+  if (!series || !Array.isArray(series.data) || series.data.length === 0) {
+    return {
+      visible: true,
+      values: [],
+      labels: [],
+      type: "pie",
+      hole: 0.4,
+      marker: { colors: [] },
+      hoverinfo: additionalOptions.hoverInfoPattern,
+      text: [],
+      textinfo: options.showDataLabels ? "percent" : "none",
+      textposition: "inside",
+      textfont: { color: [] },
+      name: (options.seriesOptions && options.seriesOptions[series.name] && options.seriesOptions[series.name].name) || series.name,
+      direction: options.direction && options.direction.type,
+      domain: { x: [0, 0], y: [0, 0] },
+      sourceData: new Map(),
+      sort: options.piesort,
+      color_scheme: options.color_scheme,
+    };
+  }
+
   const {
     cellWidth,
     cellHeight,
@@ -106,8 +129,26 @@ function prepareSeries(series: any, options: any, additionalOptions: any) {
 }
 
 export default function preparePieData(seriesList: any, options: any) {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  const palette = AllColorPaletteArrays[options.color_scheme];
+  // Defensive checks for input validity
+  if (!Array.isArray(seriesList) || seriesList.length === 0) {
+    return [];
+  }
+  if (!options || typeof options !== 'object') {
+    return [];
+  }
+  if (
+    typeof seriesList[0] === 'undefined' ||
+    !Array.isArray(seriesList[0].data) ||
+    seriesList[0].data.length === 0
+  ) {
+    return [];
+  }
+
+  const colorScheme = options.color_scheme && AllColorPaletteArrays[options.color_scheme as keyof typeof AllColorPaletteArrays]
+    ? options.color_scheme
+    : "Redash";
+  const palette = AllColorPaletteArrays[colorScheme as keyof typeof AllColorPaletteArrays];
+
   const valuesColors = {};
   let getDefaultColor : Function;
 

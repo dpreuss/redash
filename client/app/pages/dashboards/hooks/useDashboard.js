@@ -37,11 +37,15 @@ function getAffectedWidgets(widgets, updatedParameters = []) {
 }
 
 export function useDashboard(dashboardData) {
-  const [dashboard, setDashboard] = useState(dashboardData);
+  const [dashboard, setDashboard] = useState(() => new Dashboard(dashboardData));
   const [filters, setFilters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [gridDisabled, setGridDisabled] = useState(false);
-  const globalParameters = useMemo(() => dashboard.getParametersDefs(), [dashboard]);
+  const globalParameters = useMemo(() =>
+    dashboard && typeof dashboard.getParametersDefs === "function"
+      ? dashboard.getParametersDefs()
+      : []
+  , [dashboard]);
   const canEditDashboard = !dashboard.is_archived && policy.canEdit(dashboard);
   const isDashboardOwnerOrAdmin = useMemo(
     () =>
@@ -72,14 +76,14 @@ export function useDashboard(dashboardData) {
       if (data.layout) {
         data.layout = normalizeLayout(data.layout);
       }
-      setDashboard(currentDashboard => extend({}, currentDashboard, data));
+      setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, ...data }));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
         data = { ...data, version: dashboard.version };
       }
       return Dashboard.save(data)
         .then((updatedDashboard) => {
-          setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
+          setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, ...pick(updatedDashboard, keys(data)) }));
           if (has(data, "name")) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
@@ -106,9 +110,10 @@ export function useDashboard(dashboardData) {
   }, [dashboard, updateDashboard]);
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
-    // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
-    // console.trace('[loadWidget] call stack');
-    widget.getParametersDefs(); // Force widget to read parameters values from URL
+    // Defensive: only call getParametersDefs if it exists and is a function
+    if (widget && typeof widget.getParametersDefs === "function") {
+      widget.getParametersDefs(); // Force widget to read parameters values from URL
+    }
     return widget.load(forceRefresh).catch((error) => {
       // QueryResultErrors are expected
       if (error instanceof QueryResultError) {
@@ -121,11 +126,10 @@ export function useDashboard(dashboardData) {
   const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
 
   const removeWidget = useCallback(widgetId => {
-    setDashboard(currentDashboard =>
-      extend({}, currentDashboard, {
-        widgets: currentDashboard.widgets.filter(widget => widget.id !== undefined && widget.id !== widgetId),
-      })
-    );
+    setDashboard(currentDashboard => new Dashboard({
+      ...currentDashboard,
+      widgets: currentDashboard.widgets.filter(widget => widget.id !== undefined && widget.id !== widgetId),
+    }));
   }, []);
 
   const dashboardRef = useRef();
@@ -208,7 +212,7 @@ export function useDashboard(dashboardData) {
   const editModeHandler = useEditModeHandler(!gridDisabled && canEditDashboard, dashboard.widgets);
 
   useEffect(() => {
-    setDashboard(dashboardData);
+    setDashboard(() => new Dashboard(dashboardData));
     loadDashboard();
     // Initialize layout if empty
     if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
@@ -219,7 +223,7 @@ export function useDashboard(dashboardData) {
         w: widget.options.position.sizeX,
         h: widget.options.position.sizeY,
       }));
-      setDashboard(currentDashboard => ({ ...currentDashboard, layout: initialLayout }));
+      setDashboard(currentDashboard => new Dashboard({ ...currentDashboard, layout: initialLayout }));
     }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -264,3 +268,5 @@ export function useDashboard(dashboardData) {
     duplicateDashboard,
   };
 }
+
+export default useDashboard;
