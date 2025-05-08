@@ -13,8 +13,8 @@ function combineFilters(localFilters, globalFilters) {
     return localFilters;
   }
 
-  return map(localFilters, localFilter => {
-    const globalFilter = find(globalFilters, f => f.name === localFilter.name);
+  return map(localFilters, (localFilter) => {
+    const globalFilter = find(globalFilters, (f) => f.name === localFilter.name);
     if (globalFilter) {
       return {
         ...localFilter,
@@ -30,8 +30,8 @@ function areFiltersEqual(a, b) {
     return false;
   }
 
-  a = fromPairs(map(a, item => [item.name, item]));
-  b = fromPairs(map(b, item => [item.name, item]));
+  a = fromPairs(map(a, (item) => [item.name, item]));
+  b = fromPairs(map(b, (item) => [item.name, item]));
 
   return isEqual(a, b);
 }
@@ -42,7 +42,7 @@ export default function VisualizationRenderer(props) {
   const [filters, setFilters] = useState(() => combineFilters(data.filters || [], props.filters)); // lazy initialization
   const filtersRef = useRef();
   filtersRef.current = filters;
-  const handleFiltersChange = useImmutableCallback(newFilters => {
+  const handleFiltersChange = useImmutableCallback((newFilters) => {
     if (!areFiltersEqual(newFilters, filters)) {
       setFilters(newFilters);
       props.onFiltersChange(newFilters);
@@ -71,7 +71,12 @@ export default function VisualizationRenderer(props) {
   // After hooks, check if data is ready
   if (!props.queryResult || !data.rows) {
     return (
-      <div className="body-row-auto spinner-container" role="status" aria-live="polite" aria-relevant="additions removals">
+      <div
+        className="body-row-auto spinner-container"
+        role="status"
+        aria-live="polite"
+        aria-relevant="additions removals"
+      >
         <div className="spinner">
           <i className="zmdi zmdi-refresh zmdi-hc-spin zmdi-hc-5x" aria-hidden="true" />
           <span className="sr-only">Loading...</span>
