@@ -218,3 +218,22 @@ routes.register(
     render: pageProps => <DashboardPage {...pageProps} />,
   })
 );
+
+export function normalizeLayout(layout) {
+  // Convert dict/object to array if needed
+  if (!Array.isArray(layout) && typeof layout === "object" && layout !== null) {
+    layout = Object.values(layout);
+  }
+  if (!Array.isArray(layout)) return [];
+  return layout
+    .filter(item => item && typeof item.i === "string")
+    .map(item => ({
+      i: item.i,
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+      // add more keys if needed
+    }))
+    .sort((a, b) => a.i.localeCompare(b.i));
+}
