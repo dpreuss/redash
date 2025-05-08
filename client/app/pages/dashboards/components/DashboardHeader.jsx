@@ -250,9 +250,13 @@ function DashboardEditControl({ dashboardConfiguration, headerExtra }) {
   const {
     setEditingLayout,
     doneBtnClickedWhileSaving,
-    dashboardStatus,
+    dashboardStatus: rawDashboardStatus,
     retrySaveDashboardLayout,
   } = dashboardConfiguration;
+
+  // Defensive default for dashboardStatus
+  const dashboardStatus = (rawDashboardStatus === undefined || rawDashboardStatus === null) ? DashboardStatusEnum.SAVED : rawDashboardStatus;
+
   let status;
   if (dashboardStatus === DashboardStatusEnum.SAVED) {
     status = <span className="save-status">Saved</span>;

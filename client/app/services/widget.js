@@ -203,12 +203,18 @@ class Widget {
       url = `${url}/${this.id}`;
     }
 
+    // Debug logging
+    // console.log('[Widget.save] called with:', { url, data });
+
     return axios.post(url, data).then(response => {
       each(response.data, (v, k) => {
         this[k] = v;
       });
 
       return this;
+    }).catch(error => {
+      console.error('[Widget.save] error:', error);
+      throw error;
     });
   }
 

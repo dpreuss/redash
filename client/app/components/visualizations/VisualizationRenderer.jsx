@@ -72,6 +72,9 @@ export default function VisualizationRenderer(props) {
   const { showFilters, visualization } = props;
 
   let options = { ...visualization.options };
+  if (props.backgroundColor) {
+    options.backgroundColor = props.backgroundColor;
+  }
 
   // define pagination size based on context for Table visualization
   if (visualization.type === "TABLE") {
@@ -97,6 +100,7 @@ VisualizationRenderer.propTypes = {
   filters: FiltersType,
   onFiltersChange: PropTypes.func,
   context: PropTypes.oneOf(["query", "widget"]).isRequired,
+  backgroundColor: PropTypes.string,
 };
 
 VisualizationRenderer.defaultProps = {

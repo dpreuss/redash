@@ -106,8 +106,6 @@ export function useDashboard(dashboardData) {
   }, [dashboard, updateDashboard]);
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
-    // console.log('[loadWidget] called for widget:', widget.id, 'forceRefresh:', forceRefresh);
-    // console.trace('[loadWidget] call stack');
     widget.getParametersDefs(); // Force widget to read parameters values from URL
     return widget.load(forceRefresh).catch((error) => {
       // QueryResultErrors are expected
@@ -207,8 +205,13 @@ export function useDashboard(dashboardData) {
   const [fullscreen, toggleFullscreen] = useFullscreenHandler();
   const editModeHandler = useEditModeHandler(!gridDisabled && canEditDashboard, dashboard.widgets);
 
+  const logSetDashboard = (label, value) => {
+    // console.log(`[setDashboard][${label}]`, value, 'type:', typeof value, 'constructor:', value && value.constructor && value.constructor.name);
+    return value;
+  };
+
   useEffect(() => {
-    setDashboard(dashboardData);
+    setDashboard(logSetDashboard('useEffect-dashboardData', dashboardData));
     loadDashboard();
     // Initialize layout if empty
     if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
@@ -219,7 +222,7 @@ export function useDashboard(dashboardData) {
         w: widget.options.position.sizeX,
         h: widget.options.position.sizeY,
       }));
-      setDashboard(currentDashboard => ({ ...currentDashboard, layout: initialLayout }));
+      setDashboard(currentDashboard => logSetDashboard('useEffect-initialLayout', new Dashboard({ ...currentDashboard, layout: initialLayout })));
     }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 

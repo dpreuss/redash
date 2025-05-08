@@ -106,33 +106,29 @@ function prepareSeries(series: any, options: any, additionalOptions: any) {
 }
 
 export default function preparePieData(seriesList: any, options: any) {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  const palette = AllColorPaletteArrays[options.color_scheme];
-  const valuesColors = {};
-  let getDefaultColor : Function;
+  const colorScheme = options.color_scheme as keyof typeof AllColorPaletteArrays;
+  const palette = AllColorPaletteArrays[colorScheme];
+  const valuesColors: Record<string, string> = {};
+  let getDefaultColor: (v: any) => string;
 
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (typeof(seriesList[0]) !== 'undefined' && ColorPaletteTypes[options.color_scheme] === 'continuous') {
-    const uniqueXValues =[... new Set(seriesList[0].data.map((d: any) => d.x))];
+  if (typeof(seriesList[0]) !== 'undefined' && ColorPaletteTypes[colorScheme] === 'continuous') {
+    const uniqueXValues = Array.from(new Set(seriesList[0].data.map((d: any) => String(d.x)))) as string[];
     const step = (palette.length - 1) / (uniqueXValues.length - 1 || 1);
-    const colorIndices = d3.range(uniqueXValues.length).map(function(i) {
-      return Math.round(step * i);
-    });
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'scale' does not exist on type 'typeof im... Remove this comment to see the full error message
+    const colorIndices = Array.from({length: uniqueXValues.length}, (_, i) => Math.round(step * i));
+    // @ts-expect-error: d3.scale.ordinal is a legacy D3 v3 API not present in @types/d3 v6+
     getDefaultColor = d3.scale.ordinal()
-      .domain(uniqueXValues) // Set domain as the unique x-values
+      .domain(uniqueXValues)
       .range(colorIndices.map(index => palette[index]));
   } else {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'scale' does not exist on type 'typeof im... Remove this comment to see the full error message
+    // @ts-expect-error: d3.scale.ordinal is a legacy D3 v3 API not present in @types/d3 v6+
     getDefaultColor = d3.scale
       .ordinal()
       .domain([])
       .range(palette);
-  };
+  }
 
   each(options.valuesOptions, (item, key) => {
     if (isString(item.color) && item.color !== "") {
-      // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       valuesColors[key] = item.color;
     }
   });
@@ -141,7 +137,6 @@ export default function preparePieData(seriesList: any, options: any) {
     ...getPieDimensions(seriesList),
     hasX: includes(options.columnMapping, "x"),
     hoverInfoPattern: getPieHoverInfoPattern(options),
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     getValueColor: (v: any) => valuesColors[v] || getDefaultColor(v),
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
-import { isEmpty, debounce, isEqual } from "lodash";
+import { isEmpty, debounce } from "lodash";
 import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import DashboardGrid from "@/components/dashboards/DashboardGrid";
@@ -50,7 +50,7 @@ function DashboardSettings({ dashboard, updateDashboard }) {
   return (
     <div className="m-b-10 p-15 bg-white tiled">
       <h4 className="m-t-0">Dashboard Settings</h4>
-      <div className="m-t-10 m-b-10">
+      <div className="m-t-10 m-b-0">
         <div className="dashboard-settings-row">
           <div className="form-group dashboard-settings-filters">
             <label htmlFor="dashboard-filters-enabled">
@@ -60,7 +60,7 @@ function DashboardSettings({ dashboard, updateDashboard }) {
                 checked={!!dashboard.dashboard_filters_enabled}
                 onChange={e => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
               />
-              <span>Use Dashboard Level Filters</span>
+              <span> Use Dashboard Level Filters</span>
             </label>
           </div>
           <div className="form-group dashboard-settings-color align-right">
@@ -235,7 +235,7 @@ function DashboardComponent(props) {
           refreshing,
           filters,
           onRename: props.onRename,
-          onRefresh: refreshDashboard,
+          refreshDashboard,
           setEditingLayout,
           gridDisabled,
           setGridDisabled,
@@ -304,11 +304,13 @@ function DashboardPage({ dashboardSlug, dashboardId, onError }) {
     Dashboard.get({ id: dashboardId, slug: dashboardSlug })
       .then(dashboardData => {
         recordEvent("view", "dashboard", dashboardData.id);
-        setDashboard(dashboardData);
+        // Defensive: ensure dashboardData is a Dashboard instance
+        const dashboardInstance = dashboardData instanceof Dashboard ? dashboardData : new Dashboard(dashboardData);
+        setDashboard(dashboardInstance);
 
         // if loaded by slug, update location url to use the id
         if (!dashboardId) {
-          location.setPath(url.parse(dashboardData.url).pathname, true);
+          location.setPath(url.parse(dashboardInstance.url).pathname, true);
         }
       })
       .catch(handleError);

@@ -38,12 +38,26 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
   const saveDashboardLayout = useCallback(
     positions => {
       if (!canEditDashboard) {
+        // console.log('[setDashboardStatus] SAVED (no edit permission)');
         setDashboardStatus(DashboardStatusEnum.SAVED);
         return;
       }
 
       const changedPositions = getChangedPositions(widgets, positions);
 
+      // Debug logging
+      // console.log('[saveDashboardLayout] positions:', positions);
+      // console.log('[saveDashboardLayout] widgets:', widgets.map(w => ({id: w.id, pos: w.options.position})));
+      // console.log('[saveDashboardLayout] changedPositions:', changedPositions);
+
+      // Guard: Only save if there are actually changed positions
+      if (!changedPositions || Object.keys(changedPositions).length === 0) {
+        // console.log('[setDashboardStatus] SAVED (no changed positions)');
+        setDashboardStatus(DashboardStatusEnum.SAVED);
+        return;
+      }
+
+      // console.log('[setDashboardStatus] SAVING');
       setDashboardStatus(DashboardStatusEnum.SAVING);
       setRecentPositions(positions);
       const saveChangedWidgets = map(changedPositions, (position, id) => {
@@ -72,8 +86,12 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
       });
 
       return Promise.all(saveChangedWidgets)
-        .then(() => setDashboardStatus(DashboardStatusEnum.SAVED))
+        .then(() => {
+          // console.log('[setDashboardStatus] SAVED (save success)');
+          setDashboardStatus(DashboardStatusEnum.SAVED);
+        })
         .catch((error) => {
+          // console.log('[setDashboardStatus] SAVING_FAILED', error);
           setDashboardStatus(DashboardStatusEnum.SAVING_FAILED);
           if (error.response && error.response.status === 409) {
             notification.error("Version Conflict", "The dashboard layout has been modified. Please try saving again.", {
@@ -107,6 +125,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
   const setEditing = useCallback(
     editing => {
       if (!editing && dashboardStatus !== DashboardStatusEnum.SAVED) {
+        // console.log('[setDashboardStatus] Done button clicked while not SAVED');
         setDoneBtnClickedWhileSaving(true);
         return;
       }
