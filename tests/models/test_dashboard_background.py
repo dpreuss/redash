@@ -1,6 +1,6 @@
-from tests import BaseTestCase
-from redash.models import Dashboard, db, Widget
+from redash.models import db
 from redash.serializers import serialize_dashboard, serialize_widget
+from tests import BaseTestCase
 
 
 class TestDashboardBackground(BaseTestCase):
@@ -9,7 +9,7 @@ class TestDashboardBackground(BaseTestCase):
         dashboard.options = {}  # Ensure options is initialized
         db.session.add(dashboard)
         db.session.commit()
-        
+
         serialized = serialize_dashboard(dashboard)
         self.assertEqual(serialized["options"]["backgroundColor"], "#ffffff")
 
@@ -18,7 +18,7 @@ class TestDashboardBackground(BaseTestCase):
         dashboard.options = {"backgroundColor": "#000000"}
         db.session.add(dashboard)
         db.session.commit()
-        
+
         serialized = serialize_dashboard(dashboard)
         self.assertEqual(serialized["options"]["backgroundColor"], "#000000")
 
@@ -95,4 +95,4 @@ class TestDashboardBackground(BaseTestCase):
         self.assertEqual(
             serialized["visualization"]["options"]["dashboardBackgroundColor"],
             "#ffffff"
-        ) 
+        )
