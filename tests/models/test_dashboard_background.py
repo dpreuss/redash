@@ -40,10 +40,7 @@ class TestDashboardBackground(BaseTestCase):
         serialized = serialize_dashboard(dashboard, with_widgets=True)
         self.assertEqual(serialized["options"]["backgroundColor"], "#cccccc")
         # Verify the background color is passed to the visualization options
-        self.assertEqual(
-            serialized["widgets"][0]["visualization"]["options"]["dashboardBackgroundColor"],
-            "#cccccc"
-        )
+        self.assertEqual(serialized["widgets"][0]["visualization"]["options"]["dashboardBackgroundColor"], "#cccccc")
 
     def test_dashboard_serialization_includes_background_color(self):
         dashboard = self.factory.create_dashboard()
@@ -75,10 +72,7 @@ class TestDashboardBackground(BaseTestCase):
         db.session.commit()
 
         serialized = serialize_widget(widget)
-        self.assertEqual(
-            serialized["visualization"]["options"]["dashboardBackgroundColor"],
-            "#ff0000"
-        )
+        self.assertEqual(serialized["visualization"]["options"]["dashboardBackgroundColor"], "#ff0000")
 
     def test_widget_serialization_defaults_to_white_background(self):
         dashboard = self.factory.create_dashboard()
@@ -92,7 +86,4 @@ class TestDashboardBackground(BaseTestCase):
         db.session.commit()
 
         serialized = serialize_widget(widget)
-        self.assertEqual(
-            serialized["visualization"]["options"]["dashboardBackgroundColor"],
-            "#ffffff"
-        )
+        self.assertEqual(serialized["visualization"]["options"]["dashboardBackgroundColor"], "#ffffff")
