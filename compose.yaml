@@ -4,11 +4,15 @@ x-redash-service: &redash-service
   build:
     context: .
     args:
-      skip_frontend_build: "true"  # set to empty string to build
+      skip_frontend_build: ""  # set to empty string to build
   volumes:
-    - .:/app
+    - redash_app:/app
   env_file:
     - .env
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
 x-redash-environment: &redash-environment
   REDASH_HOST: http://localhost:5001
   REDASH_LOG_LEVEL: "INFO"
@@ -30,10 +34,12 @@ services:
       - redis
     ports:
       - "5001:5000"
-      - "5678:5678"
+      - "15678:5678"
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   scheduler:
     <<: *redash-service
     command: dev_scheduler
@@ -41,6 +47,8 @@ services:
       - server
     environment:
       <<: *redash-environment
+    volumes:
+      - ./:/app
   worker:
     <<: *redash-service
     command: dev_worker
@@ -49,11 +57,13 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+    volumes:
+      - ./:/app
   redis:
     image: redis:7-alpine
     restart: unless-stopped
   postgres:
-    image: pgautoupgrade/pgautoupgrade:latest
+    image: postgres:13-alpine
     ports:
       - "15432:5432"
     # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
@@ -63,9 +73,22 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
+      PGDATA: /var/lib/postgresql/data/pgdata/pg_data
+    volumes:
+      - ./redash.sql:/docker-entrypoint-initdb.d/redash.sql
+      - pg_data:/var/lib/postgresql/data/pgdata
   email:
     image: maildev/maildev
     ports:
       - "1080:1080"
       - "1025:1025"
     restart: unless-stopped
+
+volumes:
+  redash_app:
+    external: true
+    name: redash_redash_app
+  pg_data:
+    external: true
+    name: pg_data
+

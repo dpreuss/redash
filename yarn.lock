@@ -1912,7 +1912,7 @@
     leaflet-fullscreen "^1.0.2"
     leaflet.markercluster "^1.1.0"
     lodash "^4.17.10"
-    numeral "^2.0.6"
+    numeral "https://github.com/StarfishStorage/Numeral-js"
     plotly.js "1.58.5"
     react-pivottable "^0.9.0"
     react-sortable-hoc "^1.10.1"
@@ -10806,11 +10806,6 @@ number-is-integer@^1.0.1:
   integrity sha1-5ZvKFy/+0nMY55x862y3LAlbIVI=
   dependencies:
     is-finite "^1.0.1"
-
-numeral@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/numeral/-/numeral-2.0.6.tgz#4ad080936d443c2561aed9f2197efffe25f4e506"
-  integrity sha1-StCAk21EPCVhrtnyGX7//iX05QY=
 
 "numeral@https://github.com/StarfishStorage/Numeral-js":
   version "2.0.7"
