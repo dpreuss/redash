@@ -22,7 +22,9 @@
       "hoverlabel": {
         "namelength": -1
       },
-      "annotations": []
+      "annotations": [],
+      "paper_bgcolor": "#ffffff",
+      "plot_bgcolor": "#ffffff"
     }
   }
 }

@@ -31,7 +31,9 @@
           "text": "a",
           "showarrow": false
         }
-      ]
+      ],
+      "paper_bgcolor": "#ffffff",
+      "plot_bgcolor": "#ffffff"
     }
   }
 }

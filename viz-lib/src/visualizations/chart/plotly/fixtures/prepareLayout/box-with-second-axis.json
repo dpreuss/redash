@@ -50,7 +50,9 @@
       },    
       "hoverlabel": {
         "namelength": -1
-      }
+      },
+      "paper_bgcolor": "#ffffff",
+      "plot_bgcolor": "#ffffff"
     }
   }
 }
