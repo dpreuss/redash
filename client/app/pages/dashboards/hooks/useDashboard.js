@@ -23,12 +23,12 @@ export { DashboardStatusEnum };
 
 function getAffectedWidgets(widgets, updatedParameters = []) {
   return !isEmpty(updatedParameters)
-    ? widgets.filter(widget =>
+    ? widgets.filter((widget) =>
         Object.values(widget.getParameterMappings())
           .filter(({ type }) => type === "dashboard-level")
           .some(({ mapTo }) =>
             includes(
-              updatedParameters.map(p => p.name),
+              updatedParameters.map((p) => p.name),
               mapTo
             )
           )
@@ -51,7 +51,7 @@ export function useDashboard(dashboardData) {
     [dashboard]
   );
   const hasOnlySafeQueries = useMemo(
-    () => every(dashboard.widgets, w => (w.getQuery() ? w.getQuery().is_safe : true)),
+    () => every(dashboard.widgets, (w) => (w.getQuery() ? w.getQuery().is_safe : true)),
     [dashboard]
   );
 
@@ -72,14 +72,14 @@ export function useDashboard(dashboardData) {
       if (data.layout) {
         data.layout = normalizeLayout(data.layout);
       }
-      setDashboard(currentDashboard => extend({}, currentDashboard, data));
+      setDashboard((currentDashboard) => extend({}, currentDashboard, data));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
         data = { ...data, version: dashboard.version };
       }
       return Dashboard.save(data)
-        .then(updatedDashboard => {
-          setDashboard(currentDashboard => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
+        .then((updatedDashboard) => {
+          setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
           if (has(data, "name")) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
@@ -116,12 +116,12 @@ export function useDashboard(dashboardData) {
     });
   }, []);
 
-  const refreshWidget = useCallback(widget => loadWidget(widget, true), [loadWidget]);
+  const refreshWidget = useCallback((widget) => loadWidget(widget, true), [loadWidget]);
 
-  const removeWidget = useCallback(widgetId => {
-    setDashboard(currentDashboard =>
+  const removeWidget = useCallback((widgetId) => {
+    setDashboard((currentDashboard) =>
       extend({}, currentDashboard, {
-        widgets: currentDashboard.widgets.filter(widget => widget.id !== undefined && widget.id !== widgetId),
+        widgets: currentDashboard.widgets.filter((widget) => widget.id !== undefined && widget.id !== widgetId),
       })
     );
   }, []);
@@ -137,7 +137,7 @@ export function useDashboard(dashboardData) {
       );
 
       return Promise.all(loadWidgetPromises).then(() => {
-        const queryResults = compact(map(dashboard.widgets, widget => widget.getQueryResult()));
+        const queryResults = compact(map(dashboard.widgets, (widget) => widget.getQueryResult()));
         const updatedFilters = collectDashboardFilters(dashboard, queryResults, location.search);
         setFilters(updatedFilters);
       });
@@ -146,7 +146,7 @@ export function useDashboard(dashboardData) {
   );
 
   const refreshDashboard = useCallback(
-    updatedParameters => {
+    (updatedParameters) => {
       if (!refreshing) {
         setRefreshing(true);
         loadDashboard(true, updatedParameters).finally(() => setRefreshing(false));
@@ -157,13 +157,13 @@ export function useDashboard(dashboardData) {
 
   const archiveDashboard = useCallback(() => {
     recordEvent("archive", "dashboard", dashboard.id);
-    Dashboard.delete(dashboard).then(updatedDashboard =>
-      setDashboard(currentDashboard => extend({}, currentDashboard, pick(updatedDashboard, ["is_archived"])))
+    Dashboard.delete(dashboard).then((updatedDashboard) =>
+      setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, ["is_archived"])))
     );
   }, [dashboard]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showShareDashboardDialog = useCallback(() => {
-    const handleDialogClose = () => setDashboard(currentDashboard => extend({}, currentDashboard));
+    const handleDialogClose = () => setDashboard((currentDashboard) => extend({}, currentDashboard));
 
     ShareDashboardDialog.showModal({
       dashboard,
@@ -176,8 +176,8 @@ export function useDashboard(dashboardData) {
   const showAddTextboxDialog = useCallback(() => {
     TextboxDialog.showModal({
       isNew: true,
-    }).onClose(text =>
-      dashboard.addWidget(text).then(() => setDashboard(currentDashboard => extend({}, currentDashboard)))
+    }).onClose((text) =>
+      dashboard.addWidget(text).then(() => setDashboard((currentDashboard) => extend({}, currentDashboard)))
     );
   }, [dashboard]);
 
@@ -189,13 +189,13 @@ export function useDashboard(dashboardData) {
         .addWidget(visualization, {
           parameterMappings: editableMappingsToParameterMappings(parameterMappings),
         })
-        .then(widget => {
+        .then((widget) => {
           const widgetsToSave = [
             widget,
             ...synchronizeWidgetTitles(widget.options.parameterMappings, dashboard.widgets),
           ];
-          return Promise.all(widgetsToSave.map(w => w.save())).then(() =>
-            setDashboard(currentDashboard => extend({}, currentDashboard))
+          return Promise.all(widgetsToSave.map((w) => w.save())).then(() =>
+            setDashboard((currentDashboard) => extend({}, currentDashboard))
           );
         })
     );
@@ -211,18 +211,20 @@ export function useDashboard(dashboardData) {
   };
 
   useEffect(() => {
-    setDashboard(logSetDashboard('useEffect-dashboardData', dashboardData));
+    setDashboard(logSetDashboard("useEffect-dashboardData", dashboardData));
     loadDashboard();
     // Initialize layout if empty
     if (dashboardData && (!dashboardData.layout || dashboardData.layout.length === 0)) {
-      const initialLayout = dashboardData.widgets.map(widget => ({
+      const initialLayout = dashboardData.widgets.map((widget) => ({
         i: widget.id.toString(),
         x: widget.options.position.col,
         y: widget.options.position.row,
         w: widget.options.position.sizeX,
         h: widget.options.position.sizeY,
       }));
-      setDashboard(currentDashboard => logSetDashboard('useEffect-initialLayout', new Dashboard({ ...currentDashboard, layout: initialLayout })));
+      setDashboard((currentDashboard) =>
+        logSetDashboard("useEffect-initialLayout", new Dashboard({ ...currentDashboard, layout: initialLayout }))
+      );
     }
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 

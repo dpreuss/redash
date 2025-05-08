@@ -36,7 +36,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
   }, [doneBtnClickedWhileSaving, dashboardStatus]);
 
   const saveDashboardLayout = useCallback(
-    positions => {
+    (positions) => {
       if (!canEditDashboard) {
         // console.log('[setDashboardStatus] SAVED (no edit permission)');
         setDashboardStatus(DashboardStatusEnum.SAVED);
@@ -74,7 +74,7 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
         return saveWidget().catch((error) => {
           if (error.response && error.response.status === 409) {
             // If we get a version conflict, refresh the widget data and try again
-            return axios.get(`api/widgets/${widget.id}`).then(response => {
+            return axios.get(`api/widgets/${widget.id}`).then((response) => {
               // Update the widget with fresh data
               Object.assign(widget, response.data);
               // Try saving again with new version
@@ -117,13 +117,13 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
     [saveDashboardLayout]
   );
 
-  const retrySaveDashboardLayout = useCallback(() => saveDashboardLayout(recentPositions), [
-    recentPositions,
-    saveDashboardLayout,
-  ]);
+  const retrySaveDashboardLayout = useCallback(
+    () => saveDashboardLayout(recentPositions),
+    [recentPositions, saveDashboardLayout]
+  );
 
   const setEditing = useCallback(
-    editing => {
+    (editing) => {
       if (!editing && dashboardStatus !== DashboardStatusEnum.SAVED) {
         // console.log('[setDashboardStatus] Done button clicked while not SAVED');
         setDoneBtnClickedWhileSaving(true);

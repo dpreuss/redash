@@ -54,7 +54,7 @@ function doSaveQuery(data, { canOverwrite = false } = {}) {
   if (isObject(data.options) && data.options.parameters) {
     data.options = {
       ...data.options,
-      parameters: map(data.options.parameters, p => p.toSaveableObject()),
+      parameters: map(data.options.parameters, (p) => p.toSaveableObject()),
     };
   }
 
@@ -100,7 +100,7 @@ export default function useUpdateQuery(query, onChange) {
       }
 
       return doSaveQuery(data, { canOverwrite: policy.canEdit(query) })
-        .then(updatedQuery => {
+        .then((updatedQuery) => {
           if (!isNil(successMessage)) {
             notification.success(successMessage);
           }

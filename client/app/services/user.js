@@ -17,7 +17,7 @@ function enableUser(user) {
 
   return axios
     .delete(disableResource(user))
-    .then(data => {
+    .then((data) => {
       notification.success(`User ${userName} is now enabled.`);
       user.is_disabled = false;
       user.profile_image_url = data.profile_image_url;
@@ -32,7 +32,7 @@ function disableUser(user) {
   const userName = sanitize(user.name);
   return axios
     .post(disableResource(user))
-    .then(data => {
+    .then((data) => {
       notification.warning(`User ${userName} is now disabled.`);
       user.is_disabled = true;
       user.profile_image_url = data.profile_image_url;
@@ -47,7 +47,7 @@ function deleteUser(user) {
   const userName = sanitize(user.name);
   return axios
     .delete(`api/users/${user.id}`)
-    .then(data => {
+    .then((data) => {
       notification.warning(`User ${userName} has been deleted.`);
       return data;
     })
@@ -72,7 +72,7 @@ function convertUserInfo(user) {
 function regenerateApiKey(user) {
   return axios
     .post(`api/users/${user.id}/regenerate_api_key`)
-    .then(data => {
+    .then((data) => {
       notification.success("The API Key has been updated.");
       return data.api_key;
     })
@@ -84,7 +84,7 @@ function regenerateApiKey(user) {
 function sendPasswordReset(user) {
   return axios
     .post(`api/users/${user.id}/reset_password`)
-    .then(data => {
+    .then((data) => {
       if (clientConfig.mailSettingsMissing) {
         notification.warning("The mail server is not configured.");
         return data.reset_link;
@@ -99,7 +99,7 @@ function sendPasswordReset(user) {
 function resendInvitation(user) {
   return axios
     .post(`api/users/${user.id}/invite`)
-    .then(data => {
+    .then((data) => {
       if (clientConfig.mailSettingsMissing) {
         notification.warning("The mail server is not configured.");
         return data.invite_link;
@@ -112,10 +112,10 @@ function resendInvitation(user) {
 }
 
 const User = {
-  query: params => axios.get("api/users", { params }),
+  query: (params) => axios.get("api/users", { params }),
   get: ({ id }) => axios.get(`api/users/${id}`),
-  create: data => axios.post(`api/users`, data),
-  save: data => axios.post(`api/users/${data.id}`, data),
+  create: (data) => axios.post(`api/users`, data),
+  save: (data) => axios.post(`api/users/${data.id}`, data),
   enableUser,
   disableUser,
   deleteUser,

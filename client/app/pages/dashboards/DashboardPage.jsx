@@ -22,7 +22,7 @@ function DashboardSettings({ dashboard, updateDashboard }) {
   const [localBackgroundColor, setLocalBackgroundColor] = useState(dashboard.options?.backgroundColor || "#ffffff");
 
   const debouncedUpdate = useCallback(
-    debounce(color => {
+    debounce((color) => {
       const newOptions = {
         ...dashboard.options,
         backgroundColor: color,
@@ -32,13 +32,13 @@ function DashboardSettings({ dashboard, updateDashboard }) {
     [dashboard.options, updateDashboard]
   );
 
-  const handleBackgroundColorChange = e => {
+  const handleBackgroundColorChange = (e) => {
     const color = e.target.value;
     setLocalBackgroundColor(color);
     debouncedUpdate(color);
   };
 
-  const handleBackgroundColorChangeComplete = e => {
+  const handleBackgroundColorChangeComplete = (e) => {
     const color = e.target.value;
     const newOptions = {
       ...dashboard.options,
@@ -58,7 +58,7 @@ function DashboardSettings({ dashboard, updateDashboard }) {
                 type="checkbox"
                 id="dashboard-filters-enabled"
                 checked={!!dashboard.dashboard_filters_enabled}
-                onChange={e => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
+                onChange={(e) => updateDashboard({ dashboard_filters_enabled: e.target.checked })}
               />
               <span> Use Dashboard Level Filters</span>
             </label>
@@ -119,8 +119,8 @@ export function normalizeLayout(layout) {
   }
   if (!Array.isArray(layout)) return [];
   return layout
-    .filter(item => item && typeof item.i === "string")
-    .map(item => ({
+    .filter((item) => item && typeof item.i === "string")
+    .map((item) => ({
       i: item.i,
       x: item.x,
       y: item.y,
@@ -133,14 +133,8 @@ export function normalizeLayout(layout) {
 
 function DashboardComponent(props) {
   const dashboardConfiguration = useDashboard(props.dashboard);
-  const {
-    dashboard,
-    updateDashboard,
-    loadWidget,
-    refreshWidget,
-    removeWidget,
-    canEditDashboard,
-  } = dashboardConfiguration;
+  const { dashboard, updateDashboard, loadWidget, refreshWidget, removeWidget, canEditDashboard } =
+    dashboardConfiguration;
   const [filters, setFilters] = useState([]);
   const [editingLayout, setEditingLayout] = useState(props.editMode);
   const [gridDisabled, setGridDisabled] = useState(false);
@@ -158,7 +152,7 @@ function DashboardComponent(props) {
   const refreshDashboard = useCallback(() => {
     if (!refreshing) {
       setRefreshing(true);
-      const promises = dashboard.widgets.map(widget => refreshWidget(widget).catch(() => {}));
+      const promises = dashboard.widgets.map((widget) => refreshWidget(widget).catch(() => {}));
       Promise.all(promises).finally(() => setRefreshing(false));
     }
   }, [refreshing, dashboard, refreshWidget]);
@@ -187,7 +181,7 @@ function DashboardComponent(props) {
   // Only update dashboard if layout has changed, and debounce the save
   const debouncedUpdateDashboard = useCallback(debounce(updateDashboard, 300), [updateDashboard]);
   const handleLayoutChange = useCallback(
-    newLayout => {
+    (newLayout) => {
       // Convert object to array if needed
       let layoutArray = newLayout;
       if (!Array.isArray(newLayout) && typeof newLayout === "object" && newLayout !== null) {
@@ -204,8 +198,8 @@ function DashboardComponent(props) {
       const normCurrent = normalizeLayout(dashboard.layout);
 
       // Check if any positions have actually changed
-      const hasPositionChanges = normNew.some(newItem => {
-        const currentItem = normCurrent.find(c => c.i === newItem.i);
+      const hasPositionChanges = normNew.some((newItem) => {
+        const currentItem = normCurrent.find((c) => c.i === newItem.i);
         if (!currentItem) return true;
         return (
           newItem.x !== currentItem.x ||
@@ -302,7 +296,7 @@ function DashboardPage({ dashboardSlug, dashboardId, onError }) {
 
   useEffect(() => {
     Dashboard.get({ id: dashboardId, slug: dashboardSlug })
-      .then(dashboardData => {
+      .then((dashboardData) => {
         recordEvent("view", "dashboard", dashboardData.id);
         // Defensive: ensure dashboardData is a Dashboard instance
         const dashboardInstance = dashboardData instanceof Dashboard ? dashboardData : new Dashboard(dashboardData);
@@ -336,7 +330,7 @@ routes.register(
   "Dashboards.LegacyViewOrEdit",
   routeWithUserSession({
     path: "/dashboard/:dashboardSlug",
-    render: pageProps => <DashboardPage {...pageProps} />,
+    render: (pageProps) => <DashboardPage {...pageProps} />,
   })
 );
 
@@ -344,6 +338,6 @@ routes.register(
   "Dashboards.ViewOrEdit",
   routeWithUserSession({
     path: "/dashboards/:dashboardId([^-]+)(-.*)?",
-    render: pageProps => <DashboardPage {...pageProps} />,
+    render: (pageProps) => <DashboardPage {...pageProps} />,
   })
 );

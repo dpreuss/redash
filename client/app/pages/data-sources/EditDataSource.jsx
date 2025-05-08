@@ -33,10 +33,10 @@ class EditDataSource extends React.Component {
 
   componentDidMount() {
     DataSource.get({ id: this.props.dataSourceId })
-      .then(dataSource => {
+      .then((dataSource) => {
         const { type } = dataSource;
         this.setState({ dataSource });
-        DataSource.types().then(types => this.setState({ type: find(types, { type }), loading: false }));
+        DataSource.types().then((types) => this.setState({ type: find(types, { type }), loading: false }));
       })
       .catch((error) => this.props.onError(error));
   }
@@ -52,7 +52,7 @@ class EditDataSource extends React.Component {
       });
   };
 
-  deleteDataSource = callback => {
+  deleteDataSource = (callback) => {
     const { dataSource } = this.state;
 
     const doDelete = () => {
@@ -78,10 +78,10 @@ class EditDataSource extends React.Component {
     });
   };
 
-  testConnection = callback => {
+  testConnection = (callback) => {
     const { dataSource } = this.state;
     DataSource.test({ id: dataSource.id })
-      .then(httpResponse => {
+      .then((httpResponse) => {
         if (httpResponse.ok) {
           notification.success("Success");
         } else {
@@ -148,6 +148,6 @@ routes.register(
   routeWithUserSession({
     path: "/data_sources/:dataSourceId",
     title: "Data Sources",
-    render: pageProps => <EditDataSourcePage {...pageProps} />,
+    render: (pageProps) => <EditDataSourcePage {...pageProps} />,
   })
 );

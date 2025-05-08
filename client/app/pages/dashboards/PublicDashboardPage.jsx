@@ -20,9 +20,8 @@ import { useDashboard } from "./hooks/useDashboard";
 import "./PublicDashboardPage.less";
 
 function PublicDashboard({ dashboard }) {
-  const { globalParameters, filters, setFilters, refreshDashboard, loadWidget, refreshWidget } = useDashboard(
-    dashboard
-  );
+  const { globalParameters, filters, setFilters, refreshDashboard, loadWidget, refreshWidget } =
+    useDashboard(dashboard);
 
   return (
     <div className="container p-t-10 p-b-20">
@@ -105,7 +104,7 @@ routes.register(
   "Dashboards.ViewShared",
   routeWithApiKeySession({
     path: "/public/dashboards/:token",
-    render: pageProps => <PublicDashboardPage {...pageProps} />,
-    getApiKey: currentRoute => currentRoute.routeParams.token,
+    render: (pageProps) => <PublicDashboardPage {...pageProps} />,
+    getApiKey: (currentRoute) => currentRoute.routeParams.token,
   })
 );

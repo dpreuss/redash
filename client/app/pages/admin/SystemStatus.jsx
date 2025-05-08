@@ -42,7 +42,7 @@ class SystemStatus extends React.Component {
   refresh = () => {
     axios
       .get("/status.json")
-      .then(data => {
+      .then((data) => {
         this.setState({
           queues: data.manager.queues,
           manager: {
@@ -87,6 +87,6 @@ routes.register(
   routeWithUserSession({
     path: "/admin/status",
     title: "System Status",
-    render: pageProps => <SystemStatus {...pageProps} />,
+    render: (pageProps) => <SystemStatus {...pageProps} />,
   })
 );
