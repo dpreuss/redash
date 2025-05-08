@@ -37,45 +37,47 @@ function areFiltersEqual(a, b) {
 }
 
 export default function VisualizationRenderer(props) {
-  const data = useQueryResultData(props.queryResult);
-  const [filters, setFilters] = useState(() => combineFilters(data.filters, props.filters)); // lazy initialization
+  // Always call hooks, even if queryResult is missing
+  const data = useQueryResultData(props.queryResult || {});
+  const [filters, setFilters] = useState(() => combineFilters(data.filters || [], props.filters)); // lazy initialization
   const filtersRef = useRef();
   filtersRef.current = filters;
-
   const handleFiltersChange = useImmutableCallback(newFilters => {
     if (!areFiltersEqual(newFilters, filters)) {
       setFilters(newFilters);
       props.onFiltersChange(newFilters);
     }
   });
-
   // Reset local filters when query results updated
   useEffect(() => {
-    handleFiltersChange(combineFilters(data.filters, props.filters));
+    handleFiltersChange(combineFilters(data.filters || [], props.filters));
   }, [data.filters, props.filters, handleFiltersChange]);
-
   // Update local filters when global filters changed.
-  // For correct behavior need to watch only `props.filters` here,
-  // therefore using ref to access current local filters
   useEffect(() => {
     handleFiltersChange(combineFilters(filtersRef.current, props.filters));
   }, [props.filters, handleFiltersChange]);
-
   const filteredData = useMemo(
     () => ({
-      columns: data.columns,
-      rows: filterData(data.rows, filters),
+      columns: data.columns || [],
+      rows: filterData(data.rows || [], filters),
     }),
     [data, filters]
   );
-
   const { showFilters, visualization } = props;
-
   let options = { ...visualization.options };
-
-  // define pagination size based on context for Table visualization
   if (visualization.type === "TABLE") {
     options.paginationSize = props.context === "widget" ? "small" : "default";
+  }
+  // After hooks, check if data is ready
+  if (!props.queryResult || !data.rows) {
+    return (
+      <div className="body-row-auto spinner-container" role="status" aria-live="polite" aria-relevant="additions removals">
+        <div className="spinner">
+          <i className="zmdi zmdi-refresh zmdi-hc-spin zmdi-hc-5x" aria-hidden="true" />
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
