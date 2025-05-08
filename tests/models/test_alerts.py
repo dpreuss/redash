@@ -172,9 +172,9 @@ class TestAlertRenderTemplate(BaseTestCase):
         ALERT_CONDITION     equals
         ALERT_THRESHOLD     5
         ALERT_NAME          %s
-        ALERT_URL           https:///default/alerts/%d
+        ALERT_URL           https://localhost:5001/default/alerts/%d
         QUERY_NAME          Query
-        QUERY_URL           https:///default/queries/%d
+        QUERY_URL           https://localhost:5001/default/queries/%d
         QUERY_RESULT_VALUE  1
         QUERY_RESULT_ROWS   [{'foo': 1}]
         QUERY_RESULT_COLS   [{'name': 'foo', 'type': 'STRING'}]
