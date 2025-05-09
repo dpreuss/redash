@@ -17,6 +17,7 @@ import PlainButton from "@/components/PlainButton";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
 import { registeredVisualizations } from "@redash/viz/lib";
+import { currentUser } from "@/services/auth";
 
 import Widget from "./Widget";
 
@@ -234,6 +235,7 @@ class VisualizationWidget extends React.Component {
     const { onRefresh, onParameterMappingsChange } = this.props;
 
     const canEditParameters = canEdit && !isEmpty(invoke(widget, "query.getParametersDefs"));
+    const canViewQuery = currentUser.hasPermission("view_query");
     const widgetQueryResult = widget.getQueryResult();
     const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
 
@@ -288,6 +290,12 @@ class VisualizationWidget extends React.Component {
           "Download as Excel File"
         )}
       </Menu.Item>,
+      (canViewQuery || canEditParameters) && <Menu.Divider key="divider_view_query" />,
+      canViewQuery && (
+        <Menu.Item key="view_query">
+          <a href={widget.getQuery().getUrl(true, widget.visualization.id)} target="_blank" rel="noopener noreferrer">View Query</a>
+        </Menu.Item>
+      ),
       canEditParameters && <Menu.Divider key="divider2" />,
       canEditParameters && (
         <Menu.Item key="edit_parameters" onClick={this.editParameterMappings}>
