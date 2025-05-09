@@ -106,6 +106,8 @@ function prepareSeries(series: any, options: any, additionalOptions: any) {
 }
 
 export default function preparePieData(seriesList: any, options: any) {
+
+
   const colorScheme = options.color_scheme as keyof typeof AllColorPaletteArrays;
   const palette = AllColorPaletteArrays[colorScheme];
   const valuesColors: Record<string, string> = {};
