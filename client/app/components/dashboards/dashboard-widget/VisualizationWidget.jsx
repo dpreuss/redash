@@ -293,7 +293,9 @@ class VisualizationWidget extends React.Component {
       (canViewQuery || canEditParameters) && <Menu.Divider key="divider_view_query" />,
       canViewQuery && (
         <Menu.Item key="view_query">
-          <a href={widget.getQuery().getUrl(true, widget.visualization.id)} target="_blank" rel="noopener noreferrer">View Query</a>
+          <a href={widget.getQuery().getUrl(true, widget.visualization.id)} target="_blank" rel="noopener noreferrer">
+            View Query
+          </a>
         </Menu.Item>
       ),
       canEditParameters && <Menu.Divider key="divider2" />,
