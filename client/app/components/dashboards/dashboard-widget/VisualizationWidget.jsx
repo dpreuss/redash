@@ -66,7 +66,11 @@ function VisualizationWidgetHeader({
       <div className="t-header widget clearfix">
         <div className="th-title">
           <p>
-            <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!currentUser.hasPermission("view_query")} />
+            <QueryLink
+              query={widget.getQuery()}
+              visualization={widget.visualization}
+              readOnly={!currentUser.hasPermission("view_query")}
+            />
           </p>
           {!isEmpty(widget.getQuery().description) && (
             <HtmlContent className="text-muted markdown query--description">
@@ -240,10 +244,10 @@ class VisualizationWidget extends React.Component {
     const canEditParameters = canEdit && !isEmpty(invoke(widget, "query.getParametersDefs"));
     const widgetQueryResult = widget.getQueryResult();
     const isQueryResultEmpty = !widgetQueryResult || !widgetQueryResult.isEmpty || widgetQueryResult.isEmpty();
-    
-    const parts = window.location.pathname.split('/').reverse();
+
+    const parts = window.location.pathname.split("/").reverse();
     let apiKey = null;
-    if (parts.length > 3 && parts[2] === 'public' && parts[0].length === 40) {
+    if (parts.length > 3 && parts[2] === "public" && parts[0].length === 40) {
       apiKey = parts[0];
     }
     const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType, apiKey);
@@ -254,17 +258,17 @@ class VisualizationWidget extends React.Component {
         ...widget.options,
         showHeader: !showHeader,
       };
-      widget.save('options', newOptions).then(() => {
+      widget.save("options", newOptions).then(() => {
         if (this._mounted) {
-            this.setState({ showHeader: !showHeader });
+          this.setState({ showHeader: !showHeader });
         }
-        if (typeof this.props.onOptionsChange === 'function') {
-            this.props.onOptionsChange(newOptions);
+        if (typeof this.props.onOptionsChange === "function") {
+          this.props.onOptionsChange(newOptions);
         }
-        if (typeof onRefresh === 'function') {
+        if (typeof onRefresh === "function") {
           onRefresh();
         }
-        if (typeof propsOnParameterMappingsChange === 'function') {
+        if (typeof propsOnParameterMappingsChange === "function") {
           propsOnParameterMappingsChange();
         }
       });
@@ -327,7 +331,7 @@ class VisualizationWidget extends React.Component {
       }
       onParameterMappingsChange();
       if (this._mounted) {
-          this.setState({ localParameters: widget.getLocalParameters() });
+        this.setState({ localParameters: widget.getLocalParameters() });
       }
     });
   };
@@ -336,7 +340,7 @@ class VisualizationWidget extends React.Component {
     try {
       const { widget, filters } = this.props;
       const { localParameters } = this.state;
-      return invoke(widget, 'getParameters', filters, localParameters);
+      return invoke(widget, "getParameters", filters, localParameters);
     } catch (error) {
       return [];
     }
@@ -352,7 +356,7 @@ class VisualizationWidget extends React.Component {
 
   onLocalFiltersChange = localFilters => {
     if (this._mounted) {
-        this.setState({ localFilters });
+      this.setState({ localFilters });
     }
   };
 
@@ -411,10 +415,10 @@ class VisualizationWidget extends React.Component {
   render() {
     const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh: propsOnRefresh } = this.props;
     const { localParameters, showHeader } = this.state;
-    
+
     const widgetQueryResult = widget.getQueryResult();
     const isRefreshing = isLoading && !!(widgetQueryResult && widgetQueryResult.getStatus());
-    
+
     const onParametersEdit = parameters => {
       const paramOrder = map(parameters, "name");
       widget.options.paramOrder = paramOrder;
