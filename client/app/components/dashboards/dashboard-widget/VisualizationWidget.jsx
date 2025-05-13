@@ -5,6 +5,7 @@ import { markdown } from "markdown";
 import cx from "classnames";
 import Menu from "antd/lib/menu";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
+import { currentUser } from "@/services/auth";
 import recordEvent from "@/services/recordEvent";
 import { formatDateTime } from "@/lib/utils";
 import Link from "@/components/Link";
@@ -18,11 +19,10 @@ import PlainButton from "@/components/PlainButton";
 import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
-import { currentUser } from "@/services/auth";
 
 import Widget from "./Widget";
 
-function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit, onToggleHeader }) {
+function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit }) {
   const canViewQuery = currentUser.hasPermission("view_query");
   const canEditParameters = canEditDashboard && !isEmpty(invoke(widget, "query.getParametersDefs"));
   const widgetQueryResult = widget.getQueryResult();
@@ -62,7 +62,7 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
         "Download as Excel File"
       )}
     </Menu.Item>,
-    (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />, 
+    (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />,
     canViewQuery && (
       <Menu.Item key="view_query">
         <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>
@@ -71,14 +71,6 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
     canEditParameters && (
       <Menu.Item key="edit_parameters" onClick={onParametersEdit}>
         Edit Parameters
-      </Menu.Item>
-    ),
-    canEditDashboard && (
-      <Menu.Item
-        key="toggle_header"
-        onClick={onToggleHeader}
-      >
-        {widget.options.showHeader === false ? "Show Header" : "Hide Header"}
       </Menu.Item>
     ),
   ]);
@@ -106,30 +98,21 @@ function VisualizationWidgetHeader({
   isEditing,
   onParametersUpdate,
   onParametersEdit,
-  showHeader,
 }) {
   const canViewQuery = currentUser.hasPermission("view_query");
-  const isCounter = widget.visualization && widget.visualization.type === "COUNTER";
+
   return (
     <>
       <RefreshIndicator refreshStartedAt={refreshStartedAt} />
       <div className="t-header widget clearfix">
         <div className="th-title">
-          {showHeader !== false ? (
-            <>
-              <p>
-                <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
-              </p>
-              {!isCounter && widget.getQuery() && widget.getQuery().description && (
-                <HtmlContent className="widget-description markdown text-muted">
-                  {markdown.toHTML(widget.getQuery().description || "")}
-                </HtmlContent>
-              )}
-            </>
-          ) : (
-            <p>
-              {widget.visualization && widget.visualization.name}
-            </p>
+          <p>
+            <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
+          </p>
+          {!isEmpty(widget.getQuery().description) && (
+            <HtmlContent className="text-muted markdown query--description">
+              {markdown.toHTML(widget.getQuery().description || "")}
+            </HtmlContent>
           )}
         </div>
       </div>
@@ -155,7 +138,6 @@ VisualizationWidgetHeader.propTypes = {
   isEditing: PropTypes.bool,
   onParametersUpdate: PropTypes.func,
   onParametersEdit: PropTypes.func,
-  showHeader: PropTypes.bool,
 };
 
 VisualizationWidgetHeader.defaultProps = {
@@ -164,7 +146,6 @@ VisualizationWidgetHeader.defaultProps = {
   onParametersEdit: () => {},
   isEditing: false,
   parameters: [],
-  showHeader: true,
 };
 
 function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
@@ -263,7 +244,6 @@ class VisualizationWidget extends React.Component {
     this.state = {
       localParameters: props.widget.getLocalParameters(),
       localFilters: props.filters,
-      _forceRerender: 0,
     };
   }
 
@@ -294,17 +274,6 @@ class VisualizationWidget extends React.Component {
       }
       onParameterMappingsChange();
       this.setState({ localParameters: widget.getLocalParameters() });
-    });
-  };
-
-  toggleHeader = () => {
-    const { widget } = this.props;
-    widget.options.showHeader = !widget.options.showHeader;
-    widget.save("options", widget.options).then(() => {
-      if (typeof widget.load === "function") {
-        widget.load();
-      }
-      this.setState({ _forceRerender: Math.random() });
     });
   };
 
@@ -370,7 +339,6 @@ class VisualizationWidget extends React.Component {
           widget,
           canEditDashboard: canEdit,
           onParametersEdit: this.editParameterMappings,
-          onToggleHeader: this.toggleHeader,
         })}
         header={
           <VisualizationWidgetHeader
@@ -380,7 +348,6 @@ class VisualizationWidget extends React.Component {
             isEditing={isEditing}
             onParametersUpdate={onRefresh}
             onParametersEdit={onParametersEdit}
-            showHeader={widget.options.showHeader}
           />
         }
         footer={
