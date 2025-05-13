@@ -283,29 +283,30 @@ class VisualizationWidget extends React.Component {
   onParametersUpdate = (updatedParameters) => {
     const { widget, onRefresh } = this.props;
     
-    // First ensure parameter values are applied to all local parameters
+    // Direct approach to ensure parameters update properly
     if (updatedParameters && updatedParameters.length > 0) {
-      // Force parameters to update in the widget query
+      // Force update the parameters directly
       updatedParameters.forEach(param => {
-        // Make sure param value is applied to all locals
+        // Apply pending values and update locals
+        if (param.hasPendingValue) {
+          param.applyPendingValue();
+        }
         if (param.locals && param.locals.length > 0) {
           param.updateLocals();
         }
       });
-      
-      // Update our local state with the fresh parameters
-      this.setState({
-        localParameters: widget.getLocalParameters()
-      }, () => {
-        // Only refresh after state is updated to ensure latest parameters are used
-        onRefresh();
-      });
-      
-      return;
     }
     
-    // If no specific parameters were updated, just refresh
-    return onRefresh();
+    // Refresh local parameters state
+    this.setState({
+      localParameters: widget.getLocalParameters()
+    });
+    
+    // Force a direct refresh of the widget
+    return widget.load(true).then(() => {
+      // Ensure parent component knows to update
+      onRefresh();
+    });
   };
 
   renderVisualization() {
