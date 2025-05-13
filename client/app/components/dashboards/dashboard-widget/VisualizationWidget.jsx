@@ -13,7 +13,6 @@ import Parameters from "@/components/Parameters";
 import TimeAgo from "@/components/TimeAgo";
 import Timer from "@/components/Timer";
 import { Moment } from "@/components/proptypes";
-import QueryLink from "@/components/QueryLink";
 import { FiltersType } from "@/components/Filters";
 import PlainButton from "@/components/PlainButton";
 import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
@@ -65,18 +64,32 @@ function VisualizationWidgetHeader({
       <RefreshIndicator refreshStartedAt={refreshStartedAt} />
       <div className="t-header widget clearfix">
         <div className="th-title">
-          <p>
-            <QueryLink
-              query={widget.getQuery()}
-              visualization={widget.visualization}
-              readOnly={!currentUser.hasPermission("view_query")}
-            />
-          </p>
-          {!isEmpty(widget.getQuery().description) && (
-            <HtmlContent className="text-muted markdown query--description">
-              {markdown.toHTML(widget.getQuery().description || "")}
-            </HtmlContent>
-          )}
+          <span>
+            {showHeader ? (
+              <>
+                {queryName}
+                {showQueryDescription && (
+                  <>
+                    <span> - </span>
+                    <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
+                      {markdown.toHTML(queryDescription)}
+                    </HtmlContent>
+                  </>
+                )}
+                {vizDescription && (
+                  <>
+                    <span> - </span>
+                    <span>{vizDescription}</span>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {isTable && queryName && <span>{queryName} - </span>}
+                {vizDescription && <span>{vizDescription}</span>}
+              </>
+            )}
+          </span>
         </div>
       </div>
       {!isEmpty(parameters) && (
@@ -416,7 +429,7 @@ class VisualizationWidget extends React.Component {
   }
 
   render() {
-    const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh: propsOnRefresh } = this.props;
+    const { widget, isLoading, isPublic, isEditing, onRefresh: propsOnRefresh } = this.props;
     const { localParameters, showHeader } = this.state;
 
     const widgetQueryResult = widget.getQueryResult();
