@@ -280,38 +280,35 @@ class VisualizationWidget extends React.Component {
     });
   };
 
-  onParametersUpdate = (updatedParameters) => {
+  onParametersUpdate = (updatedClonesWithValueApplied) => {
     const { widget, onRefresh } = this.props;
-    
-    // Direct approach to ensure parameters update properly
-    if (updatedParameters && updatedParameters.length > 0) {
-      // Force update the parameters directly
-      updatedParameters.forEach(param => {
-        // Apply pending values and update locals
-        if (param.hasPendingValue) {
-          param.applyPendingValue();
-        }
-        if (param.locals && param.locals.length > 0) {
-          param.updateLocals();
+
+    // 1. Update the *original* Parameter instances within the widget's Query object.
+    const originalQueryParameters = widget.getQuery()?.getParametersDefs(false); // Get original instances
+
+    if (originalQueryParameters) {
+      updatedClonesWithValueApplied.forEach(updatedClone => {
+        const originalParam = originalQueryParameters.find(p => p.name === updatedClone.name);
+        if (originalParam) {
+          // Directly set the value on the original parameter instance.
+          originalParam.setValue(updatedClone.value);
         }
       });
     }
-    
-    // Refresh local parameters state
-    this.setState({
-      localParameters: widget.getLocalParameters()
-    });
-    
-    // Force a direct refresh of the widget
-    return widget.load(true).then(() => {
-      // Ensure parent component knows to update
+
+    // 2. Update the localParameters state in VisualizationWidget.
+    this.setState({ localParameters: widget.getLocalParameters() }, () => {
+      // 3. Trigger the refresh for this widget.
       onRefresh();
     });
+
+    return Promise.resolve();
   };
 
   renderVisualization() {
     const { widget, filters } = this.props;
     const widgetQueryResult = widget.getQueryResult();
+
     const widgetStatus = widgetQueryResult && widgetQueryResult.getStatus();
     switch (widgetStatus) {
       case "failed":
