@@ -20,7 +20,7 @@ import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
 import { registeredVisualizations } from "@redash/viz/lib";
- 
+
 import Widget from "./Widget";
 
 function RefreshIndicator({ refreshStartedAt }) {
