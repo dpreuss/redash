@@ -98,6 +98,7 @@ function VisualizationWidgetHeader({
   isEditing,
   onParametersUpdate,
   onParametersEdit,
+  showHeader,
 }) {
   const canViewQuery = currentUser.hasPermission("view_query");
 
@@ -138,6 +139,7 @@ VisualizationWidgetHeader.propTypes = {
   isEditing: PropTypes.bool,
   onParametersUpdate: PropTypes.func,
   onParametersEdit: PropTypes.func,
+  showHeader: PropTypes.bool,
 };
 
 VisualizationWidgetHeader.defaultProps = {
@@ -146,6 +148,7 @@ VisualizationWidgetHeader.defaultProps = {
   onParametersEdit: () => {},
   isEditing: false,
   parameters: [],
+  showHeader: true,
 };
 
 function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
@@ -277,6 +280,21 @@ class VisualizationWidget extends React.Component {
     });
   };
 
+  onParametersUpdate = (updatedParameters) => {
+    const { widget, onRefresh } = this.props;
+    
+    // Update the local parameters in the state to match what was changed
+    if (updatedParameters && updatedParameters.length > 0) {
+      this.setState(state => {
+        const localParameters = widget.getLocalParameters();
+        return { localParameters };
+      });
+    }
+    
+    // Call onRefresh to refresh the widget data
+    return onRefresh();
+  };
+
   renderVisualization() {
     const { widget, filters } = this.props;
     const widgetQueryResult = widget.getQueryResult();
@@ -346,8 +364,9 @@ class VisualizationWidget extends React.Component {
             refreshStartedAt={isRefreshing ? widget.refreshStartedAt : null}
             parameters={localParameters}
             isEditing={isEditing}
-            onParametersUpdate={onRefresh}
+            onParametersUpdate={this.onParametersUpdate}
             onParametersEdit={onParametersEdit}
+            showHeader={widget.options.showHeader}
           />
         }
         footer={
