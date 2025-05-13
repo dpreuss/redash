@@ -111,9 +111,9 @@ export function useDashboard(dashboardData) {
   }, [dashboard, updateDashboard]);
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
-    // Defensive: only call getParametersDefs if it exists and is a function
+    // Removed debug logging
     if (widget && typeof widget.getParametersDefs === "function") {
-      widget.getParametersDefs(); // Force widget to read parameters values from URL
+      widget.getParametersDefs();
     }
     return widget.load(forceRefresh).catch((error) => {
       // QueryResultErrors are expected

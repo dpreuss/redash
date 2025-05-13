@@ -4,10 +4,12 @@ import { AllColorPaletteArrays, ColorPaletteTypes } from "@/visualizations/Color
 import { cleanNumber, normalizeValue, getSeriesAxis } from "./utils";
 
 function getSeriesColor(options: any, seriesOptions: any, seriesIndex: any, numSeries: any) {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  let palette = AllColorPaletteArrays[options.color_scheme];
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (ColorPaletteTypes[options.color_scheme] === 'continuous' && palette.length > numSeries) {
+  let palette = AllColorPaletteArrays[options.color_scheme as keyof typeof AllColorPaletteArrays];
+  if (!palette) {
+    palette = AllColorPaletteArrays["Redash"];
+    if (!palette) palette = [];
+  }
+  if (ColorPaletteTypes[options.color_scheme as keyof typeof ColorPaletteTypes] === 'continuous' && palette.length > numSeries) {
     const step = (palette.length - 1) / (numSeries - 1 || 1);
     const index = Math.round(step * seriesIndex);
     return seriesOptions.color || palette[index % palette.length];
@@ -171,10 +173,11 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
 }
 
 export default function prepareDefaultData(seriesList: any, options: any) {
+  seriesList = Array.isArray(seriesList) ? seriesList : [];
   const additionalOptions = {
     hoverInfoPattern: getHoverInfoPattern(options),
   };
-  const numSeries = seriesList.length
+  const numSeries = seriesList.length;
 
   return map(seriesList, (series, index) => prepareSeries(series, options, numSeries, { ...additionalOptions, index }));
 }
