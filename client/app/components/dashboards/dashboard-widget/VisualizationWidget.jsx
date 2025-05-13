@@ -277,9 +277,35 @@ class VisualizationWidget extends React.Component {
     });
   };
 
+  onParametersUpdate = (updatedClonesWithValueApplied) => {
+    const { widget, onRefresh } = this.props;
+
+    // 1. Update the *original* Parameter instances within the widget's Query object.
+    const originalQueryParameters = widget.getQuery()?.getParametersDefs(false); // Get original instances
+
+    if (originalQueryParameters) {
+      updatedClonesWithValueApplied.forEach(updatedClone => {
+        const originalParam = originalQueryParameters.find(p => p.name === updatedClone.name);
+        if (originalParam) {
+          // Directly set the value on the original parameter instance.
+          originalParam.setValue(updatedClone.value);
+        }
+      });
+    }
+
+    // 2. Update the localParameters state in VisualizationWidget.
+    this.setState({ localParameters: widget.getLocalParameters() }, () => {
+      // 3. Trigger the refresh for this widget.
+      onRefresh();
+    });
+
+    return Promise.resolve();
+  };
+
   renderVisualization() {
     const { widget, filters } = this.props;
     const widgetQueryResult = widget.getQueryResult();
+
     const widgetStatus = widgetQueryResult && widgetQueryResult.getStatus();
     switch (widgetStatus) {
       case "failed":
