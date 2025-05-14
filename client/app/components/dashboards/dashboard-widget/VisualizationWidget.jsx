@@ -52,7 +52,7 @@ function VisualizationWidgetHeader({
     const chartName = widget.visualization.name;
     const defaultName = vizConfig ? vizConfig.name : "";
     const vizDescription = chartName && chartName !== defaultName ? chartName : "";
-    
+
     return (
       <>
         {vizDescription && (
@@ -64,7 +64,7 @@ function VisualizationWidgetHeader({
           <div className="m-b-10 p-l-15 p-r-15">
             <Parameters
               parameters={parameters}
-              sortable={isEditing} 
+              sortable={isEditing}
               appendSortableToParent={false}
               onValuesChange={onParametersUpdate}
               onParametersEdit={onParametersEdit}
