@@ -19,6 +19,7 @@ import ExpandedWidgetDialog from "@/components/dashboards/ExpandedWidgetDialog";
 import EditParameterMappingsDialog from "@/components/dashboards/EditParameterMappingsDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
 import { registeredVisualizations } from "@redash/viz/lib";
+import QueryLink from "@/components/QueryLink";
 
 import Widget from "./Widget";
 
@@ -46,50 +47,48 @@ function VisualizationWidgetHeader({
   onParametersEdit,
   showHeader,
 }) {
-  const vizConfig = registeredVisualizations[widget.visualization.type];
-  const chartName = widget.visualization.name;
-  const defaultName = vizConfig ? vizConfig.name : "";
-  const queryName = widget.getQuery().name;
-  const queryDescription = widget.getQuery().description;
-  const vizDescription = chartName && chartName !== defaultName ? chartName : "";
-  const isTable = widget.visualization.type === "TABLE";
-  const showQueryDescription = !!queryDescription && queryDescription.trim() !== "";
-
   if (!showHeader) {
-    return null;
+    const vizConfig = registeredVisualizations[widget.visualization.type];
+    const chartName = widget.visualization.name;
+    const defaultName = vizConfig ? vizConfig.name : "";
+    const vizDescription = chartName && chartName !== defaultName ? chartName : "";
+    
+    return (
+      <>
+        {vizDescription && (
+          <div className="widget-hidden-header-description p-t-5 p-b-5 p-l-15 p-r-15">
+            <small>{vizDescription}</small>
+          </div>
+        )}
+        {!isEmpty(parameters) && (
+          <div className="m-b-10 p-l-15 p-r-15">
+            <Parameters
+              parameters={parameters}
+              sortable={isEditing} 
+              appendSortableToParent={false}
+              onValuesChange={onParametersUpdate}
+              onParametersEdit={onParametersEdit}
+            />
+          </div>
+        )}
+      </>
+    );
   }
 
+  const canViewQuery = currentUser.hasPermission("view_query");
   return (
     <>
       <RefreshIndicator refreshStartedAt={refreshStartedAt} />
       <div className="t-header widget clearfix">
         <div className="th-title">
-          <span>
-            {showHeader ? (
-              <>
-                {queryName}
-                {showQueryDescription && (
-                  <>
-                    <span> - </span>
-                    <HtmlContent className="text-muted markdown query--description" style={{ display: "inline" }}>
-                      {markdown.toHTML(queryDescription)}
-                    </HtmlContent>
-                  </>
-                )}
-                {vizDescription && (
-                  <>
-                    <span> - </span>
-                    <span>{vizDescription}</span>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                {isTable && queryName && <span>{queryName} - </span>}
-                {vizDescription && <span>{vizDescription}</span>}
-              </>
-            )}
-          </span>
+          <p>
+            <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
+          </p>
+          {!isEmpty(widget.getQuery().description) && (
+            <HtmlContent className="text-muted markdown query--description">
+              {markdown.toHTML(widget.getQuery().description || "")}
+            </HtmlContent>
+          )}
         </div>
       </div>
       {!isEmpty(parameters) && (
