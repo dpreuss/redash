@@ -22,7 +22,17 @@ import VisualizationRenderer from "@/components/visualizations/VisualizationRend
 
 import Widget from "./Widget";
 
-function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParametersEdit, onToggleHeader, showHeader }) {
+function visualizationWidgetMenuOptions({
+  widget,
+  canEditDashboard,
+  onParametersEdit,
+  onToggleShowVizDescription,
+  onToggleShowQueryName,
+  onToggleShowQueryDescription,
+  showVizDescription,
+  showQueryName,
+  showQueryDescription,
+}) {
   const canViewQuery = currentUser.hasPermission("view_query");
   const canEditParameters = canEditDashboard && !isEmpty(invoke(widget, "query.getParametersDefs"));
   const widgetQueryResult = widget.getQueryResult();
@@ -32,8 +42,8 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
   if (parts.length > 3 && parts[2] === "public" && parts[0].length === 40) {
     apiKey = parts[0];
   }
-  const downloadLink = (fileType) => widgetQueryResult.getLink(widget.getQuery().id, fileType, apiKey);
-  const downloadName = (fileType) => widgetQueryResult.getName(widget.getQuery().name, fileType);
+  const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType, apiKey);
+  const downloadName = fileType => widgetQueryResult.getName(widget.getQuery().name, fileType);
   return compact([
     <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
       {!isQueryResultEmpty ? (
@@ -62,10 +72,18 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
         "Download as Excel File"
       )}
     </Menu.Item>,
-    <Menu.Item key="toggle_header" onClick={onToggleHeader}>
-      {showHeader ? "Hide Header" : "Show Header"}
+    <Menu.Divider key="divider_before_toggle_options" />,
+    <Menu.Item key="toggle_query_name" onClick={onToggleShowQueryName}>
+      {showQueryName ? "Hide Query Name" : "Show Query Name"}
     </Menu.Item>,
-    <Menu.Divider key="divider_after_toggle_header" />,
+    <Menu.Item key="toggle_query_description" onClick={onToggleShowQueryDescription}>
+      {showQueryDescription ? "Hide Query Description" : "Show Query Description"}
+    </Menu.Item>,
+    <Menu.Item key="toggle_viz_description" onClick={onToggleShowVizDescription} disabled={showQueryName}>
+      {showVizDescription ? "Hide Visualization Description" : "Show Visualization Description"}
+      {showQueryName && <span className="text-muted"> (disabled when query name is shown)</span>}
+    </Menu.Item>,
+
     (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />,
     canViewQuery && (
       <Menu.Item key="view_query">
@@ -102,7 +120,9 @@ function VisualizationWidgetHeader({
   isEditing,
   onParametersUpdate,
   onParametersEdit,
-  showHeader,
+  showVizDescription,
+  showQueryName,
+  showQueryDescription,
 }) {
   const canViewQuery = currentUser.hasPermission("view_query");
   const vizDescription = widget.visualization.name;
@@ -112,20 +132,17 @@ function VisualizationWidgetHeader({
       <RefreshIndicator refreshStartedAt={refreshStartedAt} />
       <div className="t-header widget clearfix">
         <div className="th-title">
-          {showHeader ? (
-            <>
-              <p>
-                <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
-              </p>
-              {!isEmpty(widget.getQuery().description) && (
-                <HtmlContent className="text-muted markdown query--description">
-                  {markdown.toHTML(widget.getQuery().description || "")}
-                </HtmlContent>
-              )}
-            </>
-          ) : (
-            vizDescription && vizDescription
+          {showQueryName && (
+            <p>
+              <QueryLink query={widget.getQuery()} visualization={widget.visualization} readOnly={!canViewQuery} />
+            </p>
           )}
+          {showQueryDescription && !isEmpty(widget.getQuery().description) && (
+            <HtmlContent className="text-muted markdown query--description">
+              {markdown.toHTML(widget.getQuery().description || "")}
+            </HtmlContent>
+          )}
+          {showVizDescription && vizDescription && vizDescription}
         </div>
       </div>
       {!isEmpty(parameters) && (
@@ -150,7 +167,9 @@ VisualizationWidgetHeader.propTypes = {
   isEditing: PropTypes.bool,
   onParametersUpdate: PropTypes.func,
   onParametersEdit: PropTypes.func,
-  showHeader: PropTypes.bool,
+  showVizDescription: PropTypes.bool,
+  showQueryName: PropTypes.bool,
+  showQueryDescription: PropTypes.bool,
 };
 
 VisualizationWidgetHeader.defaultProps = {
@@ -159,7 +178,9 @@ VisualizationWidgetHeader.defaultProps = {
   onParametersEdit: () => {},
   isEditing: false,
   parameters: [],
-  showHeader: true,
+  showVizDescription: false,
+  showQueryName: true,
+  showQueryDescription: true,
 };
 
 function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
@@ -167,7 +188,7 @@ function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
   const updatedAt = invoke(widgetQueryResult, "getUpdatedAt");
   const [refreshClickButtonId, setRefreshClickButtonId] = useState();
 
-  const refreshWidget = (buttonId) => {
+  const refreshWidget = buttonId => {
     if (!refreshClickButtonId) {
       setRefreshClickButtonId(buttonId);
       onRefresh().finally(() => setRefreshClickButtonId(null));
@@ -181,8 +202,7 @@ function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
           <PlainButton
             className="refresh-button hidden-print btn btn-sm btn-default btn-transparent"
             onClick={() => refreshWidget(1)}
-            data-test="RefreshButton"
-          >
+            data-test="RefreshButton">
             <i className={cx("zmdi zmdi-refresh", { "zmdi-hc-spin": refreshClickButtonId === 1 })} aria-hidden="true" />
             <span className="sr-only">
               {refreshClickButtonId === 1 ? "Refreshing, please wait. " : "Press to refresh. "}
@@ -203,8 +223,7 @@ function VisualizationWidgetFooter({ widget, isPublic, onRefresh, onExpand }) {
         {!isPublic && (
           <PlainButton
             className="btn btn-sm btn-default hidden-print btn-transparent btn__refresh"
-            onClick={() => refreshWidget(2)}
-          >
+            onClick={() => refreshWidget(2)}>
             <i className={cx("zmdi zmdi-refresh", { "zmdi-hc-spin": refreshClickButtonId === 2 })} aria-hidden="true" />
             <span className="sr-only">
               {refreshClickButtonId === 2 ? "Refreshing, please wait." : "Press to refresh."}
@@ -262,7 +281,9 @@ class VisualizationWidget extends React.Component {
     this.state = {
       localParameters: props.widget.getLocalParameters(),
       localFilters: props.filters,
-      showHeader: props.widget.options?.showHeader ?? true,
+      showVizDescription: props.widget.options?.showVizDescription ?? false,
+      showQueryName: props.widget.options?.showQueryName ?? true,
+      showQueryDescription: props.widget.options?.showQueryDescription ?? true,
     };
   }
 
@@ -273,7 +294,7 @@ class VisualizationWidget extends React.Component {
     onLoad();
   }
 
-  onLocalFiltersChange = (localFilters) => {
+  onLocalFiltersChange = localFilters => {
     this.setState({ localFilters });
   };
 
@@ -286,7 +307,7 @@ class VisualizationWidget extends React.Component {
     EditParameterMappingsDialog.showModal({
       dashboard,
       widget,
-    }).onClose((valuesChanged) => {
+    }).onClose(valuesChanged => {
       // refresh widget if any parameter value has been updated
       if (valuesChanged) {
         onRefresh();
@@ -296,16 +317,60 @@ class VisualizationWidget extends React.Component {
     });
   };
 
-  toggleHeader = () => {
+  toggleShowVizDescription = () => {
     const { widget, onOptionsChange } = this.props;
-    const { showHeader } = this.state;
+    const { showVizDescription, showQueryName } = this.state;
+
+    if (showQueryName && !showVizDescription) {
+      return;
+    }
 
     const newOptions = {
       ...widget.options,
-      showHeader: !showHeader,
+      showVizDescription: !showVizDescription,
     };
     widget.save("options", newOptions).then(() => {
-      this.setState({ showHeader: !showHeader });
+      this.setState({ showVizDescription: !showVizDescription });
+      if (typeof onOptionsChange === "function") {
+        onOptionsChange(newOptions);
+      }
+    });
+  };
+
+  toggleShowQueryName = () => {
+    const { widget, onOptionsChange } = this.props;
+    const { showQueryName } = this.state;
+
+    const newQueryName = !showQueryName;
+    const newVizDescription = newQueryName ? false : this.state.showVizDescription;
+
+    const newOptions = {
+      ...widget.options,
+      showQueryName: newQueryName,
+      showVizDescription: newVizDescription,
+    };
+
+    widget.save("options", newOptions).then(() => {
+      this.setState({
+        showQueryName: newQueryName,
+        showVizDescription: newVizDescription,
+      });
+      if (typeof onOptionsChange === "function") {
+        onOptionsChange(newOptions);
+      }
+    });
+  };
+
+  toggleShowQueryDescription = () => {
+    const { widget, onOptionsChange } = this.props;
+    const { showQueryDescription } = this.state;
+
+    const newOptions = {
+      ...widget.options,
+      showQueryDescription: !showQueryDescription,
+    };
+    widget.save("options", newOptions).then(() => {
+      this.setState({ showQueryDescription: !showQueryDescription });
       if (typeof onOptionsChange === "function") {
         onOptionsChange(newOptions);
       }
@@ -346,8 +411,7 @@ class VisualizationWidget extends React.Component {
             className="body-row-auto spinner-container"
             role="status"
             aria-live="polite"
-            aria-relevant="additions removals"
-          >
+            aria-relevant="additions removals">
             <div className="spinner">
               <i className="zmdi zmdi-refresh zmdi-hc-spin zmdi-hc-5x" aria-hidden="true" />
               <span className="sr-only">Loading...</span>
@@ -359,11 +423,11 @@ class VisualizationWidget extends React.Component {
 
   render() {
     const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh } = this.props;
-    const { localParameters, showHeader } = this.state;
+    const { localParameters, showVizDescription, showQueryName, showQueryDescription } = this.state;
     const widgetQueryResult = widget.getQueryResult();
     const isRefreshing = isLoading && !!(widgetQueryResult && widgetQueryResult.getStatus());
 
-    const onParametersEdit = (parameters) => {
+    const onParametersEdit = parameters => {
       const paramOrder = map(parameters, "name");
       widget.options.paramOrder = paramOrder;
       widget.save("options", { paramOrder });
@@ -377,8 +441,12 @@ class VisualizationWidget extends React.Component {
           widget,
           canEditDashboard: canEdit,
           onParametersEdit: this.editParameterMappings,
-          onToggleHeader: this.toggleHeader,
-          showHeader,
+          onToggleShowVizDescription: this.toggleShowVizDescription,
+          onToggleShowQueryName: this.toggleShowQueryName,
+          onToggleShowQueryDescription: this.toggleShowQueryDescription,
+          showVizDescription,
+          showQueryName,
+          showQueryDescription,
         })}
         header={
           <VisualizationWidgetHeader
@@ -388,7 +456,9 @@ class VisualizationWidget extends React.Component {
             isEditing={isEditing}
             onParametersUpdate={onRefresh}
             onParametersEdit={onParametersEdit}
-            showHeader={showHeader}
+            showVizDescription={showVizDescription}
+            showQueryName={showQueryName}
+            showQueryDescription={showQueryDescription}
           />
         }
         footer={
@@ -399,8 +469,7 @@ class VisualizationWidget extends React.Component {
             onExpand={this.expandWidget}
           />
         }
-        tileProps={{ "data-refreshing": isRefreshing }}
-      >
+        tileProps={{ "data-refreshing": isRefreshing }}>
         {this.renderVisualization()}
       </Widget>
     );
