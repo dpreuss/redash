@@ -75,14 +75,15 @@ function visualizationWidgetMenuOptions({
     </Menu.Item>,
     <Menu.Divider key="divider_before_display_options" />,
     <Menu.SubMenu key="display_options" title="Display Options">
-      <Menu.Item key="show_viz_name"  disabled={true} multiple={true} >
+      <Menu.Item key="show_viz_name" disabled={true} multiple={true}>
         <Switch size="small" checked={showVizName} onClick={onToggleShowVizName} /> Show Visualization Name
-    </Menu.Item>
-      <Menu.Item key="show_query_name" disabled={true} multiple={true} >
+      </Menu.Item>
+      <Menu.Item key="show_query_name" disabled={true} multiple={true}>
         <Switch size="small" checked={showQueryName} onClick={onToggleShowQueryName} /> Show Query Name
       </Menu.Item>
-      <Menu.Item key="show_query_description" disabled={true} multiple={true} >
-        <Switch size="small" checked={showQueryDescription} onClick={onToggleShowQueryDescription} /> Show Query Description
+      <Menu.Item key="show_query_description" disabled={true} multiple={true}>
+        <Switch size="small" checked={showQueryDescription} onClick={onToggleShowQueryDescription} /> Show Query
+        Description
       </Menu.Item>
     </Menu.SubMenu>,
 
