@@ -4,6 +4,7 @@ import { compact, isEmpty, invoke, map } from "lodash";
 import { markdown } from "markdown";
 import cx from "classnames";
 import Menu from "antd/lib/menu";
+import Switch from "antd/lib/switch";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
 import { currentUser } from "@/services/auth";
 import recordEvent from "@/services/recordEvent";
@@ -26,10 +27,10 @@ function visualizationWidgetMenuOptions({
   widget,
   canEditDashboard,
   onParametersEdit,
-  onToggleShowVizDescription,
+  onToggleShowVizName,
   onToggleShowQueryName,
   onToggleShowQueryDescription,
-  showVizDescription,
+  showVizName,
   showQueryName,
   showQueryDescription,
 }) {
@@ -72,17 +73,18 @@ function visualizationWidgetMenuOptions({
         "Download as Excel File"
       )}
     </Menu.Item>,
-    <Menu.Divider key="divider_before_toggle_options" />,
-    <Menu.Item key="toggle_viz_description" onClick={onToggleShowVizDescription} disabled={showQueryName}>
-      {showVizDescription ? "Hide Visualization Description" : "Show Visualization Description"}
-      {showQueryName && <span className="text-muted"> (Hide Query Name to Show)</span>}
-    </Menu.Item>,
-    <Menu.Item key="toggle_query_name" onClick={onToggleShowQueryName}>
-      {showQueryName ? "Hide Query Name" : "Show Query Name"}
-    </Menu.Item>,
-    <Menu.Item key="toggle_query_description" onClick={onToggleShowQueryDescription}>
-      {showQueryDescription ? "Hide Query Description" : "Show Query Description"}
-    </Menu.Item>,
+    <Menu.Divider key="divider_before_display_options" />,
+    <Menu.SubMenu key="display_options" title="Display Options">
+      <Menu.Item key="show_viz_name"  disabled={true} multiple={true} >
+        <Switch size="small" checked={showVizName} onClick={onToggleShowVizName} /> Show Visualization Name
+    </Menu.Item>
+      <Menu.Item key="show_query_name" disabled={true} multiple={true} >
+        <Switch size="small" checked={showQueryName} onClick={onToggleShowQueryName} /> Show Query Name
+      </Menu.Item>
+      <Menu.Item key="show_query_description" disabled={true} multiple={true} >
+        <Switch size="small" checked={showQueryDescription} onClick={onToggleShowQueryDescription} /> Show Query Description
+      </Menu.Item>
+    </Menu.SubMenu>,
 
     (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />,
     canViewQuery && (
@@ -120,12 +122,12 @@ function VisualizationWidgetHeader({
   isEditing,
   onParametersUpdate,
   onParametersEdit,
-  showVizDescription,
+  showVizName,
   showQueryName,
   showQueryDescription,
 }) {
   const canViewQuery = currentUser.hasPermission("view_query");
-  const vizDescription = widget.visualization.name;
+  const vizName = widget.visualization.name;
 
   return (
     <>
@@ -142,7 +144,7 @@ function VisualizationWidgetHeader({
               {markdown.toHTML(widget.getQuery().description || "")}
             </HtmlContent>
           )}
-          {showVizDescription && vizDescription && vizDescription}
+          {showVizName && vizName && vizName}
         </div>
       </div>
       {!isEmpty(parameters) && (
@@ -167,7 +169,7 @@ VisualizationWidgetHeader.propTypes = {
   isEditing: PropTypes.bool,
   onParametersUpdate: PropTypes.func,
   onParametersEdit: PropTypes.func,
-  showVizDescription: PropTypes.bool,
+  showVizName: PropTypes.bool,
   showQueryName: PropTypes.bool,
   showQueryDescription: PropTypes.bool,
 };
@@ -178,7 +180,7 @@ VisualizationWidgetHeader.defaultProps = {
   onParametersEdit: () => {},
   isEditing: false,
   parameters: [],
-  showVizDescription: false,
+  showVizName: false,
   showQueryName: true,
   showQueryDescription: true,
 };
@@ -283,7 +285,7 @@ class VisualizationWidget extends React.Component {
     this.state = {
       localParameters: props.widget.getLocalParameters(),
       localFilters: props.filters,
-      showVizDescription: props.widget.options?.showVizDescription ?? false,
+      showVizName: props.widget.options?.showVizName ?? false,
       showQueryName: props.widget.options?.showQueryName ?? true,
       showQueryDescription: props.widget.options?.showQueryDescription ?? true,
     };
@@ -319,20 +321,20 @@ class VisualizationWidget extends React.Component {
     });
   };
 
-  toggleShowVizDescription = () => {
+  toggleShowVizName = () => {
     const { widget, onOptionsChange } = this.props;
-    const { showVizDescription, showQueryName } = this.state;
+    const { showVizName, showQueryName } = this.state;
 
-    if (showQueryName && !showVizDescription) {
+    if (showQueryName && !showVizName) {
       return;
     }
 
     const newOptions = {
       ...widget.options,
-      showVizDescription: !showVizDescription,
+      showVizName: !showVizName,
     };
     widget.save("options", newOptions).then(() => {
-      this.setState({ showVizDescription: !showVizDescription });
+      this.setState({ showVizName: !showVizName });
       if (typeof onOptionsChange === "function") {
         onOptionsChange(newOptions);
       }
@@ -344,18 +346,18 @@ class VisualizationWidget extends React.Component {
     const { showQueryName } = this.state;
 
     const newQueryName = !showQueryName;
-    const newVizDescription = newQueryName ? false : this.state.showVizDescription;
+    const newVizDescription = newQueryName ? false : this.state.showVizName;
 
     const newOptions = {
       ...widget.options,
       showQueryName: newQueryName,
-      showVizDescription: newVizDescription,
+      showVizName: newVizDescription,
     };
 
     widget.save("options", newOptions).then(() => {
       this.setState({
         showQueryName: newQueryName,
-        showVizDescription: newVizDescription,
+        showVizName: newVizDescription,
       });
       if (typeof onOptionsChange === "function") {
         onOptionsChange(newOptions);
@@ -426,7 +428,7 @@ class VisualizationWidget extends React.Component {
 
   render() {
     const { widget, isLoading, isPublic, canEdit, isEditing, onRefresh } = this.props;
-    const { localParameters, showVizDescription, showQueryName, showQueryDescription } = this.state;
+    const { localParameters, showVizName, showQueryName, showQueryDescription } = this.state;
     const widgetQueryResult = widget.getQueryResult();
     const isRefreshing = isLoading && !!(widgetQueryResult && widgetQueryResult.getStatus());
 
@@ -444,10 +446,10 @@ class VisualizationWidget extends React.Component {
           widget,
           canEditDashboard: canEdit,
           onParametersEdit: this.editParameterMappings,
-          onToggleShowVizDescription: this.toggleShowVizDescription,
+          onToggleShowVizName: this.toggleShowVizName,
           onToggleShowQueryName: this.toggleShowQueryName,
           onToggleShowQueryDescription: this.toggleShowQueryDescription,
-          showVizDescription,
+          showVizName,
           showQueryName,
           showQueryDescription,
         })}
@@ -459,7 +461,7 @@ class VisualizationWidget extends React.Component {
             isEditing={isEditing}
             onParametersUpdate={onRefresh}
             onParametersEdit={onParametersEdit}
-            showVizDescription={showVizDescription}
+            showVizName={showVizName}
             showQueryName={showQueryName}
             showQueryDescription={showQueryDescription}
           />
